@@ -1,7 +1,7 @@
 module HasegawaWakatani
 
 using FFTW, HDF5, H5Zblosc, LinearAlgebra, LaTeXStrings, MuladdMacro, UnPack, Base.Threads,
-    Dates, Printf, CUDA, Adapt
+    Dates, Printf, CUDA, Adapt, Logging
 export @unpack
 
 # TODO make ext
