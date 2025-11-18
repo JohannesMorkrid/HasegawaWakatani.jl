@@ -9,7 +9,7 @@ The *docs* folder is for documentation, which houses this tutorial, but was down
 ## Importing the modules
 As this code is not ''Released'' the following code needs to be included to import the code into a ``.jl`` file:
 ```
-include(relpath(pwd(), @__DIR__) * "/src/HasegawaWakatini.jl")
+using HasegawaWakatani
 ```
 **NOTE:** This assumes the user is in the *HasegawaWakatani* folder.
 

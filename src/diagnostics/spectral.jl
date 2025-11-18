@@ -33,7 +33,7 @@ get_modes(state_hat::AbstractArray, prob, time, ::Val{:both}) = @views state_hat
 
 function get_modes(state_hat::AbstractArray, prob, time, ::Val{:diag})
     if ndims(state_hat) > 2
-        return diag.(eachslice(state_hat; dims=ndims(prob.domain) + 1))
+        return stack(diag.(eachslice(state_hat; dims=ndims(prob.domain) + 1)))
     elseif ndims(state_hat) == 2
         return diag(state_hat)
     else

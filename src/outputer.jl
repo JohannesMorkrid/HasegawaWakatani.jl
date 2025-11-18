@@ -112,7 +112,8 @@ end
   a copy of the initial condition stored in `prob`, returning it alongside the initial time. 
 """
 function prepare_initial_state(prob; physical_transform=identity)
-    state = physical_transform(copy(prob.u0))
+    state = copy(prob.u0)
+    physical_transform(state)
     t0 = first(prob.tspan)
     return state, t0
 end
@@ -466,6 +467,11 @@ function compute_storage_need(N_steps::Int, stride::Int, sample::AbstractArray; 
     (cld(N_steps, stride) + 1) * length(sample) * sizeof(eltype(sample))
 end
 
+function compute_storage_need(N_steps, stride, sample::Number; context="")
+    stride < 1 ? throw(ArgumentError(context * "stride must be ≥ 1, got $stride")) : nothing
+    (cld(N_steps, stride) + 1) * sizeof(eltype(sample))
+end
+
 # Edge case
 compute_storage_need(N_steps, stride, sample::Nothing; context="") = 0
 
@@ -646,7 +652,8 @@ function determine_strides(initial_samples, prob::SpectralODEProblem, total_stor
     println("Estimated filesize: ", format_bytes(total_storage_requirement))
 
     # Compare cumulative storage need to Output storage need
-    if parse_storage_limit(total_storage_limit) < total_storage_requirement
+    if !isempty(total_storage_limit) &&
+       parse_storage_limit(total_storage_limit) < total_storage_requirement
         # TODO add nice error message showing what each diagnostic requires, so the user can make up their mind
         error("The Output requires $(format_bytes(total_storage_requirement)), which is \
         more than the storage_limit: $total_storage_limit.")

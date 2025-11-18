@@ -321,7 +321,7 @@ function probe_all(state, prob, time, positions; interpolation=nothing)
     dim = ndims(domain) + 1
 
     # Calculate spectral fields
-    Ω_hat = selectdim(state, dim, 2)
+    n_hat, Ω_hat = eachslice(state; dims=dim)
     ϕ_hat = solve_phi(Ω_hat)
     v_x_hat = -diff_y(ϕ_hat)
 
@@ -329,7 +329,7 @@ function probe_all(state, prob, time, positions; interpolation=nothing)
     cache = zeros(size(domain)) |> memory_type(prob.domain)
 
     # Transform to physical space and probe fields
-    n = mul!(cache, get_bwd(domain), selectdim(state, dim, 1))
+    n = mul!(cache, get_bwd(domain), n_hat)
     n_p = probe_field(n, domain, positions, interpolation)
     Ω = mul!(cache, get_bwd(domain), Ω_hat)
     Ω_p = probe_field(Ω, domain, positions, interpolation)
