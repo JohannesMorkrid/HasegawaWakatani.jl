@@ -87,11 +87,11 @@ end
     (wavenumbers, E) where E = E(k) (`Tuple`).
 """
 function energy_spectrum(power_spectrum::AbstractArray, prob, time, ::Val{:radial})
-    return prob.domain.kx, vec(sum(power_spectrum; dims=1)) * (2 * pi / prob.domain.Ly)
+    return vec(sum(power_spectrum; dims=1)) * (2 * pi / prob.domain.Ly) # prob.domain.kx,
 end
 
 function energy_spectrum(power_spectrum::AbstractArray, prob, time, ::Val{:poloidal})
-    return prob.domain.ky, vec(sum(power_spectrum; dims=2)) * (2 * pi / prob.domain.Lx)
+    return vec(sum(power_spectrum; dims=2)) * (2 * pi / prob.domain.Lx) # prob.domain.ky, 
 end
 
 # TODO add windowed option?
@@ -109,7 +109,7 @@ function energy_spectrum(power_spectrum::AbstractArray{<:Number,2},
     # Compute energy spectrum (S(k) = 2π*(∫S(k, θ)dθ, θ∈[0, 2π])/2π)
     E = 2pi .* [mean(power_spectrum[k-dk.<=k_magnitude.<k+dk]) for k in k_values]
     # Return spectrum alongside wavenumbers
-    return k_values, E
+    return E #k_values, E
 end
 
 """
