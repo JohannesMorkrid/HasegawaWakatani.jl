@@ -1,10 +1,7 @@
 name: CompatHelper
 on:
-  push:
-    branches:
-      - testing-compat-helper
   schedule:
-    - cron: 0 0 * * *
+    - cron: '*/10 * * * *' # cron: 0 0 * * *
   workflow_dispatch:
 permissions:
   contents: write
