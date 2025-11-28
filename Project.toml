@@ -37,6 +37,7 @@ Plots = "1"
 julia = "1.8"
 SMTPClient = "0.6.4"
 UnPack = "1"
+H5Zblosc = "0.1"
 
 [extras]
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"
