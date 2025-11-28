@@ -32,6 +32,8 @@ HasegawaWakataniSMTPClientExt = "SMTPClient"
 [compat]
 Adapt = "4.4.0"
 ComponentArrays = "0.15.29"
+LaTeXStrings = "1"
+HDF5 = "0.17"
 H5Zblosc = "0.1"
 Plots = "1"
 Documenter = "1"
