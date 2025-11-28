@@ -34,6 +34,7 @@ Adapt = "4.4.0"
 ComponentArrays = "0.15.29"
 H5Zblosc = "0.1"
 Plots = "1"
+Documenter = "1"
 SMTPClient = "0.6.4"
 julia = "1.8"
 
