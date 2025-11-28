@@ -34,6 +34,7 @@ HasegawaWakataniComponentArraysExt = "ComponentArrays"
 HasegawaWakataniSMTPClientExt = "SMTPClient"
 
 [compat]
+julia = "1.8"
 Adapt = "4.4.0"
 ComponentArrays = "0.15.29"
 SMTPClient = "0.6.4"
