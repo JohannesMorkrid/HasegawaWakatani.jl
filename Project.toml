@@ -32,6 +32,8 @@ HasegawaWakataniSMTPClientExt = "SMTPClient"
 [compat]
 Adapt = "4.4.0"
 ComponentArrays = "0.15.29"
+FFTW = "1"
+Plots = "1"
 SMTPClient = "0.6.4"
 Statistics = "1"
 julia = "1.8"
