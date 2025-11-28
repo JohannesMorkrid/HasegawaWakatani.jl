@@ -31,4 +31,3 @@ HasegawaWakataniSMTPClientExt = "SMTPClient"
 
 [compat]
 Adapt = "4.4.0"
-ProgressMeter = "1.11.0"
