@@ -33,7 +33,6 @@ HasegawaWakataniSMTPClientExt = "SMTPClient"
 Adapt = "4.4.0"
 ComponentArrays = "0.15.29"
 UnPack = "1"
-Interpolations = "0.16"
 SMTPClient = "0.6.4"
 julia = "1.8"
 
