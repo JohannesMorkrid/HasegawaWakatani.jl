@@ -28,7 +28,6 @@ function NonLinear(du, u, operators, p, t)
     dη .= poisson_bracket(η, ϕ) + κ * quadratic_term(diff_x(η), diff_x(η)) +
           κ * quadratic_term(diff_y(η), diff_y(η))
     dΩ .= poisson_bracket(Ω, ϕ) - diff_y(η)
-    return cat(dη, dΩ; dims=3)
 end
 
 # Parameters
