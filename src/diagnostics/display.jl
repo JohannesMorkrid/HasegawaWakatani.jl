@@ -44,7 +44,7 @@ end
 
 # --------------------------------------- Potential ----------------------------------------
 
-function plot_potential(state, prob, time; kwargs...)
+function plot_potential(state, prob, time; digits=2, kwargs...)
     @unpack operators, domain = prob
     @unpack solve_phi = operators
     Ω = selectdim(state, ndims(domain) + 1, 2)
