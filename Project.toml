@@ -34,3 +34,4 @@ HasegawaWakataniSMTPClientExt = "SMTPClient"
 [compat]
 Adapt = "4.4.0"
 SMTPClient = "0.6.4"
+GR = "0.69"
