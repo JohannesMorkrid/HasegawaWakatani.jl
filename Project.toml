@@ -30,8 +30,3 @@ SMTPClient = "c35d69d1-b747-5018-a192-25bc5e63c83d"
 [extensions]
 HasegawaWakataniComponentArraysExt = "ComponentArrays"
 HasegawaWakataniSMTPClientExt = "SMTPClient"
-
-[compat]
-Adapt = "4.4.0"
-SMTPClient = "0.6.4"
-GR = "0.69"
