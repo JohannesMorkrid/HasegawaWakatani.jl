@@ -181,7 +181,6 @@ end
 
 # ----------------------------------- Interface --------------------------------------------
 
-# TODO make use of domain interface functions [#23](https://github.com/JohannesMorkrid/HasegawaWakatani.jl/issues/23)
 function Base.show(io::IO, m::MIME"text/plain", domain::AbstractDomain)
     typename = nameof(typeof(domain))
 
