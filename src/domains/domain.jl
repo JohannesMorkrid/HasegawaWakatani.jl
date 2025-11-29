@@ -181,19 +181,27 @@ end
 
 # ----------------------------------- Interface --------------------------------------------
 
-# TODO make use of domain interface functions [#23](https://github.com/JohannesMorkrid/HasegawaWakatani.jl/issues/23)
 function Base.show(io::IO, m::MIME"text/plain", domain::AbstractDomain)
     typename = nameof(typeof(domain))
 
+    # This line generalizes the printing of Ns and Ls, but be warned about order! Therefore
+    # it will not be implemented before necessary 
+    # print(io, "N", join(string.(labels) .* ":" .* string.(size(domain)), ", N"))
     if get(io, :compact, false)
         print(io, typename, "(", domain.Nx, ",", domain.Ny, ",", domain.Lx, ",", domain.Ly,
               ")")
     else
+        kwargs = domain_kwargs(domain)
         print(io, typename, "(Nx:", domain.Nx, ", Ny:", domain.Ny, ", Lx:", domain.Lx,
-              ", Ly:", domain.Ly, ", real_transform:", domain.real_transform,
-              ", dealiased:", domain.dealiased, ", MemoryType:", memory_type(domain), ")")
-        if first(domain.x) != 0.0 || first(domain.y) != 0.0
-            print(io, " offset by (", first(domain.x), ", ", first(domain.y), ")")
+              ", Ly:", domain.Ly)
+        # Print additional kwargs
+        for (key, value) in pairs(kwargs)
+            print(io, ", ", key, ":", value)
+        end
+        print(io, ", MemoryType:", memory_type(domain), ")")
+        if any(first.(get_points(domain)) .!= 0)
+            print(io, " offset by (",
+                  join(reverse(first.(get_points(domain))), ", "), ")")
         end
     end
 end
@@ -220,6 +228,13 @@ Return a tuple of points along each axis, default (y, x).
 get_points(domain::Domain) = (domain.y, domain.x)
 
 """
+    get_label(domain::Domain)
+
+Return a tuple of labels (Symbols) for each axis, default (:y, :x).
+"""
+get_labels(domain::Domain) = (:y, :x)
+
+"""
     wave_vectors(domain::Domain)
 
 Return a tuple of wave vectors for each axis, default (ky, kx).
@@ -231,8 +246,8 @@ wave_vectors(domain::Domain) = (domain.ky, domain.kx)
 
 Return the domain specific keyword arguments, depending on the type of AbstractDomain.
 """
-domain_kwargs(domain::Domain) = (real_transform=domain.real_transform,
-                                 dealiased=dealiased)
+domain_kwargs(domain::Domain) = (; real_transform=domain.real_transform,
+                                 dealiased=domain.dealiased)
 
 """
     spectral_size(domain::AbstractDomain)
