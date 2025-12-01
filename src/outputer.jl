@@ -58,6 +58,8 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
     store_locally::Bool
     transformed::Bool
     h5_kwargs::K #Possibly also called a filter
+    flush_interval::Int
+    last_flush_time::DateTime
 
     function Output(prob::SOP; filename::FN=basename(tempname()) * ".h5",
                     physical_transform::PT=identity,
@@ -65,6 +67,7 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
                     store_hdf::Bool=true,
                     store_locally::Bool=true,
                     storage_limit::AbstractString="",
+                    flush_interval::Int=10,
                     h5_kwargs...) where {SOP<:SpectralODEProblem,
                                          FN<:AbstractString,PT<:Function,
                                          SN<:Union{AbstractString,Symbol}}
@@ -99,7 +102,7 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
             typeof(physical_transform),typeof(h5_kwargs)}(diagnostics, strides, state, t,
                                                           simulation, physical_transform,
                                                           store_hdf, store_locally, true,
-                                                          h5_kwargs)
+                                                          h5_kwargs, flush_interval, now())
     end
 end
 
@@ -688,10 +691,8 @@ function handle_output!(output::O, step::Integer, state::T, prob::SOP,
     # Handle diagnostics
     maybe_sample_diagnostics!(output, step, state, prob, time)
 
-    # TODO make it time based
-    if step % 1000 == 0
-        output.store_hdf ? flush(output.simulation.file) : nothing
-    end
+    # Handle flushing of file
+    maybe_flush!(output)
 
     # Check if first value is NaN, if one value is NaN the whole Array will turn NaN after FFT
     assert_no_nan(state, time)
@@ -777,6 +778,13 @@ end
     # end
 """
 
+function maybe_flush!(output)
+    # Time based flushing
+    if now() - output.last_flush_time >= Minute(output.flush_interval)
+        output.store_hdf ? flush(output.simulation.file) : nothing
+        output.last_flush_time = now()
+    end
+end
 # -------------------------------------- Checkpoint ----------------------------------------
 
 """
