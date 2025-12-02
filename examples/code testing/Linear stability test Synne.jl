@@ -36,7 +36,6 @@ tspan = [0.0, 500.0]
 
 # Array of diagnostics want
 diagnostics = @diagnostics [
-    #probe_density(positions = [(5, 0), (8.5, 0), (11.25, 0), (14.375, 0)], stride=10),
     progress(; stride=100),
     cfl(; silent=true),
     plot_density(; stride=1000),
