@@ -184,24 +184,27 @@ end
 function Base.show(io::IO, m::MIME"text/plain", domain::AbstractDomain)
     typename = nameof(typeof(domain))
 
-    # This line generalizes the printing of Ns and Ls, but be warned about order! Therefore
-    # it will not be implemented before necessary 
-    # print(io, "N", join(string.(labels) .* ":" .* string.(size(domain)), ", N"))
+    # Assumes 2D domain
+    labels = reverse(get_labels(domain))
+    Ns = reverse(size(domain))
+    Ls = reverse(lengths(domain))
+    points = reverse(first.(get_points(domain)))
+
+    print(io, typename, "(")
+    print(io, join("N" .* string.(labels) .* ":" .* string.(Ns), ", "))
+    print(io, ", ")
+    print(io, join("L" .* string.(labels) .* ":" .* string.(Ls), ", "))
+
     if get(io, :compact, false)
-        print(io, typename, "(", domain.Nx, ",", domain.Ny, ",", domain.Lx, ",", domain.Ly,
-              ")")
-    else
+        print(io, ")")
+    else # Prints additional kwargs
         kwargs = domain_kwargs(domain)
-        print(io, typename, "(Nx:", domain.Nx, ", Ny:", domain.Ny, ", Lx:", domain.Lx,
-              ", Ly:", domain.Ly)
-        # Print additional kwargs
         for (key, value) in pairs(kwargs)
             print(io, ", ", key, ":", value)
         end
         print(io, ", MemoryType:", memory_type(domain), ")")
-        if any(first.(get_points(domain)) .!= 0)
-            print(io, " offset by (",
-                  join(reverse(first.(get_points(domain))), ", "), ")")
+        if any(points .!= 0)
+            print(io, " offset by (", join(points, ", "), ")")
         end
     end
 end
