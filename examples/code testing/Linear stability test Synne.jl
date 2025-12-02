@@ -12,8 +12,8 @@ function Linear(du, u, operators, p, t)
     η, Ω = eachslice(u; dims=3)
     dη, dΩ = eachslice(du; dims=3)
     @unpack ν, μ = p
-    dη = ν * laplacian(η)
-    dΩ = μ * laplacian(Ω)
+    dη .= ν * laplacian(η)
+    dΩ .= μ * laplacian(Ω)
 end
 
 # Non-linear operator
@@ -32,16 +32,15 @@ end
 parameters = (ν=1e-2, μ=1e-2, g=1e-3, σ=1e-5, κ=sqrt(1e-3))
 
 # Time interval
-tspan = [0.0, 3600.0]
+tspan = [0.0, 500.0]
 
 # Array of diagnostics want
 diagnostics = @diagnostics [
-    #probe_density(positions = [(5, 0), (8.5, 0), (11.25, 0), (14.375, 0)], stride=10),
     progress(; stride=100),
     cfl(; silent=true),
     plot_density(; stride=1000),
     get_modes(; stride=100),
-    get_log_modes(; stride=100, axis=:ky) # Corresponds to kx = 0
+    get_log_modes(; stride=100, axis=:ky)
 ]
 
 # The problem
