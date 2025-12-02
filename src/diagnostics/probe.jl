@@ -58,7 +58,7 @@ function probe_field(field::AbstractArray, domain::AbstractDomain,
                      interpolation::Nothing=nothing)
     data = field[indices]
     # Return either the one point, or the array
-    length(data) == 1 ? data[1] : data
+    length(data) == 1 ? only(Array(data)) : data
 end
 
 # GPU optimized in-place without interpolation
