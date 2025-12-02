@@ -2,7 +2,7 @@
 using HasegawaWakatani
 using CUDA
 
-domain = Domain(1024, 1024; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32) #dealiased=false?
+domain = Domain(1024, 1024; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32)
 n0 = initial_condition(log_gaussian, domain; A=1, B=1, l=1)
 ic = cat(n0, zero(n0); dims=3)
 
