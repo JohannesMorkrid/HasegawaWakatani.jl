@@ -17,6 +17,10 @@ function spectral_solve(prob::SOP, scheme::SA=MSS3(),
     # Enable CTRL+C from terminal outside of interactive mode
     Base.exit_on_sigint(false)
 
+    # Asyncronous background process that backups the file and checkpoint
+    backup_timer = Timer(_ -> backup(output, cache, step, t), 0;
+                         interval=output.backup_interval)
+
     try
         # This method assumes step number does not overflow!
         while step < total_steps
@@ -33,13 +37,13 @@ function spectral_solve(prob::SOP, scheme::SA=MSS3(),
         debug ? rethrow(error) : showerror(stdout, error)
     end
 
-    # Store the cache to be able to resume simulations
-    save_checkpoint!(output, cache, step, t)
-
     # TODO catch edge case
 
-    # Write buffer to file
-    output.store_hdf ? flush(output.simulation.file) : nothing
+    # Stop the backuping
+    close(backup_timer)
+
+    # Do one more backup for safety measure 
+    backup(output, cache, step, t)
 
     # Returns output struct
     return output
@@ -59,4 +63,12 @@ function initialize_solve(prob::SOP, scheme::SA, output::O,
         step = 0
     end
     return cache, t, step
+end
+
+function backup(output, cache, step, t)
+    output.store_hdf ? nothing : return nothing
+    # Store the cache to be able to resume simulations
+    save_checkpoint!(output, cache, step, t)
+    # Write buffer to file
+    flush(output.simulation.file)
 end
