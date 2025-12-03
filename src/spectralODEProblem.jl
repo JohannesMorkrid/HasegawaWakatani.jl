@@ -47,7 +47,8 @@ mutable struct SpectralODEProblem{LType<:Function,NType<:Function,
                                 remove_modes::Function=remove_nothing, kwargs...)
 
         # If no linear operator given, assume there is non and match signature
-        isinplace(NonLinear) ? L(du, u, d, p, t) = (du .= zero(u)) : L(u, d, p, t) = zero(u)
+        isinplace(NonLinear) isa Val{true} ? L(du, u, operators, p, t) = (du .= zero(u)) :
+        L(u, operators, p, t) = zero(u)
 
         SpectralODEProblem(L, NonLinear, u0, domain, tspan; p=p, dt=dt,
                            remove_modes=remove_modes, kwargs...)
@@ -105,17 +106,11 @@ function prepare_functions(Linear::Function, NonLinear::Function, operators::Nam
     return L, N
 end
 
-# TODO make it more generalized
 """
 """
 function prepare_initial_condition(u0, domain::Domain)
-    # Transform to MemoryType
-    u0 = u0 |> domain.MemoryType{domain.precision}
-
-    # Used for normal Fourier transform
-    eltype(fwd(domain)) <: Complex ? u0 = complex(u0) : nothing
-
-    return u0
+    # Transform to the correct MemoryType for physical space
+    u0 |> domain.MemoryType{eltype(fwd(domain))}
 end
 
 # -------------------------- Spectral Coefficent Initialization ----------------------------
