@@ -47,7 +47,8 @@ mutable struct SpectralODEProblem{LType<:Function,NType<:Function,
                                 remove_modes::Function=remove_nothing, kwargs...)
 
         # If no linear operator given, assume there is non and match signature
-        isinplace(NonLinear) ? L(du, u, d, p, t) = (du .= zero(u)) : L(u, d, p, t) = zero(u)
+        isinplace(NonLinear) isa Val{true} ? L(du, u, operators, p, t) = (du .= zero(u)) :
+        L(u, operators, p, t) = zero(u)
 
         SpectralODEProblem(L, NonLinear, u0, domain, tspan; p=p, dt=dt,
                            remove_modes=remove_modes, kwargs...)
