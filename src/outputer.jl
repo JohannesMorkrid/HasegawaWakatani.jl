@@ -216,6 +216,7 @@ end
 
   Creates a `simulation_name` string based on the users input. 
   ### Supported symbols:
+  * `:filename` creates a string with the basename of the file without the extension.
   * `:timestamp` creates a timestamp string using `Dates.now()`.
   * `:parameters` creates a string with the parameter names and values.
 """
