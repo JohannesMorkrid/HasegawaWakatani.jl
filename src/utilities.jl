@@ -19,12 +19,12 @@ end
 
 # ------------------------------- Initial conditions ---------------------------------------
 
-function gaussian(x, y; A=1, B=0, l=1, x0=0, y0=0)
-    B + A * exp(-((x - x0)^2 + (y - y0)^2) / (2 * l^2))
+function gaussian(x, y; A=1, B=0, l=1, lx=l, ly=l, x0=0, y0=0)
+    B + A * exp(-(x - x0)^2 / (2 * lx^2) - (y - y0)^2 / (2 * ly^2))
 end
 
-function log_gaussian(x, y; A=1, B=1, l=1, x0=0, y0=0)
-    log(gaussian(x, y; A=A, B=B, l=l, x0=x0, y0=y0))
+function log_gaussian(x, y; A=1, B=1, l=1, lx=l, ly=l, x0=0, y0=0)
+    log(gaussian(x, y; A=A, B=B, lx=lx, ly=ly, x0=x0, y0=y0))
 end
 
 sinusoidal(x, y; Lx=1, Ly=1, n=1, m=1) = sin(2 * π * n * x / Lx) * cos(2 * π * m * y / Ly)
@@ -58,8 +58,18 @@ function random_crossphased(domain::AbstractDomain; value=10^-6, cross_phase=pi 
     [real(ifft(n_hat));;; real(ifft(phi_hat))]
 end
 
-function isolated_blob(domain::AbstractDomain; kwargs...)
+function isolated_blob(domain::AbstractDomain; density::Symbol=:lin, kwargs...)
+    print(kwargs)
+    isolated_blob(domain, Val(density); kwargs...)
+end
+
+function isolated_blob(domain::AbstractDomain, ::Val{:lin}; kwargs...)
     u0 = initial_condition(gaussian, domain; kwargs...)
+    cat(u0, zero(u0); dims=3)
+end
+
+function isolated_blob(domain::AbstractDomain, ::Val{:log}; kwargs...)
+    u0 = initial_condition(log_gaussian, domain; kwargs...)
     cat(u0, zero(u0); dims=3)
 end
 
