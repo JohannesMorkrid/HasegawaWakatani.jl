@@ -275,6 +275,9 @@ function isinplace(f::Function)
     However, no methods of `$f` match these signatures.")
 end
 
+get_linear_operator(prob::SpectralODEProblem) = prob.L.Linear
+get_nonlinear_operator(prob::SpectralODEProblem) = prob.N.NonLinear
+
 function Base.show(io::IO, m::MIME"text/plain", prob::SpectralODEProblem)
     print(io, nameof(typeof(prob)), "(", nameof(prob.L), ",", nameof(prob.N), ";dt=",
           prob.dt)
