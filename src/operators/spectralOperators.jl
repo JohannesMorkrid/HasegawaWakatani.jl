@@ -7,24 +7,10 @@
 # Abstract class that may inherit from a more abstract one
 abstract type SpectralOperator end
 
-# TODO check if needed
-# For broadcasting the operators for composite operators
-Base.broadcastable(op::SpectralOperator) = Ref(op)
-
 # ----------------------------------- Linear Operators -------------------------------------
 
 # Abstract type that all Linear operators inherit from
 abstract type LinearOperator{T} <: SpectralOperator end
-
-# TODO add Algebraic rules of Linear operators
-import Base: *, +, -, ^
-*(a::Number, op::LinearOperator) = typeof(op)(a .* op.coeffs)
-
-# Allows composite operators
-# TODO add some sort of promotion rules
-+(a::LinearOperator, b::LinearOperator) = typeof(op)(a.coeffs .+ b.coeffs)
--(a::LinearOperator, b::LinearOperator) = typeof(op)(a.coeffs .- b.coeffs)
-^(op::LinearOperator, power::Number) = typeof(op)(op.coeffs .^ power)
 
 # --------------------------------- Elementwise Operator -----------------------------------
 
@@ -66,7 +52,7 @@ include("poissonBracket.jl")
 
 include("solvePhi.jl")
 include("spectralFunctions.jl")
-#include("sources.jl")
+include("sources.jl")
 
 # ------------------------------------ Operator Recipe -------------------------------------
 
@@ -82,18 +68,15 @@ struct OperatorRecipe{KwargsType<:NamedTuple}
     end
 end
 
+# TODO Figure out args
+default_kwargs(::Val{T}) where {T} = NamedTuple()
+
 Base.hash(oprecipe::OperatorRecipe, h::UInt) = hash((oprecipe.op, oprecipe.kwargs), h)
 function Base.:(==)(or1::OperatorRecipe, or2::OperatorRecipe)
     or1.op == or2.op && or1.kwargs == or2.kwargs
 end
 
-# function Base.get(oprecipe::OperatorRecipe, key, default)
-#     hasproperty(oprecipe, key) ? getproperty(oprecipe, key) : default
-# end
-
 # ------------------------------------- Constructors ---------------------------------------
-
-# TODO add @op for each operator
 
 # Catch all method, can be overwritten with specilization
 operator_dependencies(::Val{_}, ::Type{__}) where {_,__} = ()
@@ -130,35 +113,25 @@ function get_operator_recipes(operators::Symbol)
     end
 end
 
+# function get_operator_recipes(operators::Symbol)
+#     if operators == :default
+#         return @op [diff_x(; order=1), diff_y(; order=1), laplacian(; order=1),
+#                     solve_phi, poisson_bracket]
+#     elseif operators == :SOL
+#         return @op [diff_x, diff_y, laplacian, solve_phi, poisson_bracket, quadratic_term]
+#     elseif operators == :all
+#         return @op [diff_x(; order=1), diff_y(; order=1), laplacian(; order=1),
+#                     solve_phi, poisson_bracket, quadratic_term, spectral_log, spectral_exp,
+#                     spectral_expm1, reciprocal]
+#     elseif operators == :none
+#         OperatorRecipe[]
+#     else
+#         error()
+#     end
+# end
+
 # --------------------------------- OperatorRecipe Macro -----------------------------------
 
 # TODO implement
 macro op()
 end
-
-## -------------------------------- TESTING BELOW ------------------------------------------
-
-# @op ∂xx = diff_x(order=2) => OperatorRecipe(:diff_x, order=2, alias=∂xx)
-
-# function prepare_operators(::Type{Domain}, operators, kx, ky, Nx, Ny; MemoryType=MemoryType,
-#     precision=precision, real_transform=real_transform, dealiased=dealiased)
-
-#     cache = Dict{Symbol,SpectralOperator}()
-
-#     # Figure out aliases
-#     #[:∂x, :∂y, :laplacian, :poisson_bracket] -> [:diff_x, :diff_y, :laplacian, :poisson_bracket]
-
-#     # Link operator to alias
-#     #[:∂x, :∂y, :laplacian, :poisson_bracket], [:diff_x, :diff_y, :laplacian, :poisson_bracket], [:diff_x, :diff_y, :laplacian, :quadratic_term, :poisson_bracket], [ElwiseOperator, ElwiseOperator, ElwiseOperator, QuadraticTerm, PoissonBracket]
-#     #-> spectral_operators = (:∂x=ElwiseOperator, :∂y=ElwiseOperator, :laplacian=ElwiseOperator, :poisson_bracket=PoissonBracket)
-
-# end
-
-# diff_x = ∂x = Dx
-# diff_y = ∂y  = Dy
-# diff_xx = ∂xx = Dxx = ∂x² = (∂x^2)
-# diff_yy = ∂yy = Dyy = ∂y² (∂y^2)
-# diff_xn = ∂xn = Dxn (∂x^n)
-# diff_yn = ∂yn = Dyn (∂y^n)
-# laplacian = diffusion = Δ
-# hyper_laplacian = hyper_diffusion (Δ^p)
