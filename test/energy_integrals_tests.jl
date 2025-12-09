@@ -100,8 +100,8 @@ parsevals_theorem(ones(129, 256), domain; compute_density=false)
     - Enstropy dissipation
 * Test that all energy evolution integrals work:
     - Energy evolution 
-    - Enstropy evolution
-* Test that can construct using different coefficient symols
+    - Enstrophy evolution
+* Test that can construct using different coefficient symbols
 * Test that parsevals_theorem and integral_of_quadratic_term are robust to changes in size 
 and lengths and if real_transform or not.
 """

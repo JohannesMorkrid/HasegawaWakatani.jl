@@ -266,7 +266,7 @@ function setup_diagnostic_group(simulation, diagnostic, N_samples, sample, t0; h
         HDF5.set_extent_dims(dset, (N_samples,))
 
         # Add metadata
-        create_attribute(h5group, "metadata", diagnostic.metadata)
+        write_attribute(h5group, "metadata", diagnostic.metadata)
 
         # TODO where should this logic be?
         # Store initial sample
@@ -774,6 +774,13 @@ end
     # end
 """
 
+function maybe_flush!(output)
+    # Time based flushing
+    if now() - output.last_flush_time >= Minute(output.flush_interval)
+        output.store_hdf ? flush(output.simulation.file) : nothing
+        output.last_flush_time = now()
+    end
+end
 # -------------------------------------- Checkpoint ----------------------------------------
 
 """

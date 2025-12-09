@@ -27,23 +27,6 @@ function NonLinear(du, u, operators, p, t)
     dΩ .= poisson_bracket(Ω, ϕ) - g * diff_y(η) + σ * ϕ
 end
 
-# Non-linear operator, fully non-linear
-# function NonLinear(du, u, operators, p, t)
-#     @unpack solve_phi, poisson_bracket, diff_x, diff_y = operators
-#     @unpack quadratic_term, spectral_exp, spectral_expm1, spectral_constant = operators
-#     η, Ω = eachslice(u; dims=3)
-#     dη, dΩ = eachslice(du; dims=3)
-#     @unpack κ, g, σ, ν = p
-#     ϕ = solve_phi(Ω)
-
-#     dη .= poisson_bracket(η, ϕ) - (1 - g) * diff_y(ϕ) - g * diff_y(η) +
-#           #-2 * ν * κ * diff_x(η) +
-#           ν * quadratic_term(diff_x(η), diff_x(η)) +
-#           ν * quadratic_term(diff_y(η), diff_y(η)) 
-#           - σ * spectral_expm1(-ϕ)
-#     dΩ .= poisson_bracket(Ω, ϕ) - g * diff_y(η) - σ * spectral_expm1(-ϕ)
-# end
-
 # Parameters
 parameters = (κ=sqrt(1e1), g=1e-1, σ=1e-1, ν=1e-2, μ=1e-2)
 
@@ -78,7 +61,7 @@ prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt
 inverse_transformation!(u) = @. u[:, :, 1] = exp(1e-2 * u[:, :, 1]) - 1
 
 # Output
-output_file_name = joinpath(@__DIR__, "output", "sheath-interchange long time series.h5")
+output_file_name = joinpath(@__DIR__, "output", "sheath-interchange_example.h5")
 output = Output(prob; filename=output_file_name, simulation_name=:parameters,
                 #physical_transform=inverse_transformation!,
                 storage_limit="1 GB",

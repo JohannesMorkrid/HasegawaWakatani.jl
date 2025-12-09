@@ -2,7 +2,7 @@
 using HasegawaWakatani
 using CUDA
 
-domain = Domain(1024, 1024; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32) #dealiased=false?
+domain = Domain(1024, 1024; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32)
 n0 = initial_condition(log_gaussian, domain; A=1, B=1, l=1)
 ic = cat(n0, zero(n0); dims=3)
 
@@ -28,7 +28,6 @@ function NonLinear(du, u, operators, p, t)
     dη .= poisson_bracket(η, ϕ) + κ * quadratic_term(diff_x(η), diff_x(η)) +
           κ * quadratic_term(diff_y(η), diff_y(η))
     dΩ .= poisson_bracket(Ω, ϕ) - diff_y(η)
-    return cat(dη, dΩ; dims=3)
 end
 
 # Parameters
