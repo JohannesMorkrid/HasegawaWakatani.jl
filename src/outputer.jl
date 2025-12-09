@@ -63,7 +63,7 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
 
     function Output(prob::SOP; filename::FN=basename(tempname()) * ".h5",
                     physical_transform::PT=identity,
-                    simulation_name::SN=:timestamp,
+                    simulation_name::SN=:filename,
                     store_hdf::Bool=true,
                     store_locally::Bool=true,
                     storage_limit::AbstractString="",
@@ -162,20 +162,25 @@ function setup_simulation_group(filename, simulation_name, prob;
     if store_hdf
         filename = add_h5_if_missing(filename)
 
+        filepath = determine_filepath(filename)
+
+        # Create path if not created
+        mkpath(dirname(filepath))
+
         # Create HDF5 file
-        file = h5open(filename, "cw")
+        file = h5open(filepath, "cw")
 
         # Create simulation name
-        simulation_name = handle_simulation_name(simulation_name, prob)
+        group_name = handle_simulation_name(simulation_name, prob, filename)
 
         # Checks how to handle simulation group
-        if !haskey(file, simulation_name)
+        if !haskey(file, group_name)
             # Create simulation group
-            simulation = create_group(file, simulation_name)
+            simulation = create_group(file, group_name)
             # Store attributes
             write_attributes(simulation, prob)
         else
-            simulation = open_group(file, simulation_name)
+            simulation = open_group(file, group_name)
         end
 
         return simulation
@@ -184,6 +189,17 @@ function setup_simulation_group(filename, simulation_name, prob;
     end
 end
 
+function determine_filepath(filename)
+    if !isempty(dirname(filename))
+        return filename
+    end
+
+    if isinteractive()
+        return joinpath(Base.source_dir(), "output", filename)
+    else
+        joinpath(pwd(), "output", filename)
+    end
+end
 # ------------------------------------- HDF5 Helpers ---------------------------------------
 
 """
@@ -203,19 +219,20 @@ end
   * `:timestamp` creates a timestamp string using `Dates.now()`.
   * `:parameters` creates a string with the parameter names and values.
 """
-function handle_simulation_name(simulation_name, prob)
+function handle_simulation_name(simulation_name, prob, filename)
     # Handle simulation_name
-    if simulation_name == :timestamp
-        simulation_name = "$(now())"
+
+    if simulation_name == :filename
+        return first(splitext(basename(filename)))
+    elseif simulation_name == :timestamp
+        return "$(now())"
     elseif simulation_name == :parameters
-        simulation_name = parameter_string(prob.p)
+        return parameter_string(prob.p)
     elseif simulation_name isa String
-        nothing
+        return nothing
     else
         error("$simulation_name is not a valid input")
     end
-
-    return simulation_name
 end
 
 """
