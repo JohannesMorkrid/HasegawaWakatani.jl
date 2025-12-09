@@ -5,7 +5,7 @@
 function plot_field(domain, field, time=-1; field_name="", digits=2, kwargs...)
     ending = (time == -1 ? ")" : ", t = $(round(time, digits=digits)))")
     title = field_name * "(x, y" * ending
-    display(heatmap(domain, field; aspect_ratio=:equal, xlabel="x", ylabel="y",
+    display(heatmap(domain, real(field); aspect_ratio=:equal, xlabel="x", ylabel="y",
                     title=title, kwargs...))
 end
 
@@ -44,7 +44,7 @@ end
 
 # --------------------------------------- Potential ----------------------------------------
 
-function plot_potential(state, prob, time; kwargs...)
+function plot_potential(state, prob, time; digits=2, kwargs...)
     @unpack operators, domain = prob
     @unpack solve_phi = operators
     Ω = selectdim(state, ndims(domain) + 1, 2)

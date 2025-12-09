@@ -58,6 +58,8 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
     store_locally::Bool
     transformed::Bool
     h5_kwargs::K #Possibly also called a filter
+    flush_interval::Int
+    last_flush_time::DateTime
 
     function Output(prob::SOP; filename::FN=basename(tempname()) * ".h5",
                     physical_transform::PT=identity,
@@ -65,6 +67,7 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
                     store_hdf::Bool=true,
                     store_locally::Bool=true,
                     storage_limit::AbstractString="",
+                    flush_interval::Int=10,
                     h5_kwargs...) where {SOP<:SpectralODEProblem,
                                          FN<:AbstractString,PT<:Function,
                                          SN<:Union{AbstractString,Symbol}}
@@ -99,7 +102,7 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
             typeof(physical_transform),typeof(h5_kwargs)}(diagnostics, strides, state, t,
                                                           simulation, physical_transform,
                                                           store_hdf, store_locally, true,
-                                                          h5_kwargs)
+                                                          h5_kwargs, flush_interval, now())
     end
 end
 
@@ -112,7 +115,8 @@ end
   a copy of the initial condition stored in `prob`, returning it alongside the initial time. 
 """
 function prepare_initial_state(prob; physical_transform=identity)
-    state = physical_transform(copy(prob.u0))
+    state = copy(prob.u0)
+    physical_transform(state)
     t0 = first(prob.tspan)
     return state, t0
 end
@@ -263,7 +267,7 @@ function setup_diagnostic_group(simulation, diagnostic, N_samples, sample, t0; h
         HDF5.set_extent_dims(dset, (N_samples,))
 
         # Add metadata
-        create_attribute(h5group, "metadata", diagnostic.metadata)
+        write_attribute(h5group, "metadata", diagnostic.metadata)
 
         # TODO where should this logic be?
         # Store initial sample
@@ -466,6 +470,11 @@ function compute_storage_need(N_steps::Int, stride::Int, sample::AbstractArray; 
     (cld(N_steps, stride) + 1) * length(sample) * sizeof(eltype(sample))
 end
 
+function compute_storage_need(N_steps, stride, sample::Number; context="")
+    stride < 1 ? throw(ArgumentError(context * "stride must be ≥ 1, got $stride")) : nothing
+    (cld(N_steps, stride) + 1) * sizeof(eltype(sample))
+end
+
 # Edge case
 compute_storage_need(N_steps, stride, sample::Nothing; context="") = 0
 
@@ -646,7 +655,8 @@ function determine_strides(initial_samples, prob::SpectralODEProblem, total_stor
     println("Estimated filesize: ", format_bytes(total_storage_requirement))
 
     # Compare cumulative storage need to Output storage need
-    if parse_storage_limit(total_storage_limit) < total_storage_requirement
+    if !isempty(total_storage_limit) &&
+       parse_storage_limit(total_storage_limit) < total_storage_requirement
         # TODO add nice error message showing what each diagnostic requires, so the user can make up their mind
         error("The Output requires $(format_bytes(total_storage_requirement)), which is \
         more than the storage_limit: $total_storage_limit.")
@@ -681,10 +691,8 @@ function handle_output!(output::O, step::Integer, state::T, prob::SOP,
     # Handle diagnostics
     maybe_sample_diagnostics!(output, step, state, prob, time)
 
-    # TODO make it time based
-    if step % 1000 == 0
-        output.store_hdf ? flush(output.simulation.file) : nothing
-    end
+    # Handle flushing of file
+    maybe_flush!(output)
 
     # Check if first value is NaN, if one value is NaN the whole Array will turn NaN after FFT
     assert_no_nan(state, time)
@@ -770,6 +778,13 @@ end
     # end
 """
 
+function maybe_flush!(output)
+    # Time based flushing
+    if now() - output.last_flush_time >= Minute(output.flush_interval)
+        output.store_hdf ? flush(output.simulation.file) : nothing
+        output.last_flush_time = now()
+    end
+end
 # -------------------------------------- Checkpoint ----------------------------------------
 
 """

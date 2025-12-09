@@ -99,8 +99,8 @@ function prepare_functions(Linear::Function, NonLinear::Function, operators::Nam
         L(du, u, p, t) = Linear(du, u, operators, p, t)
         N(du, u, p, t) = NonLinear(du, u, operators, p, t)
     else
-        L(u, p, t) = Linear(u, operators, p, t)
-        N(u, p, t) = NonLinear(u, operators, p, t)
+        L = (u, p, t) -> Linear(u, operators, p, t)
+        N = (u, p, t) -> NonLinear(u, operators, p, t)
     end
     return L, N
 end

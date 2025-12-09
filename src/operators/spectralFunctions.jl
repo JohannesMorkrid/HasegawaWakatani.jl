@@ -11,7 +11,8 @@ struct SpectralFunction{F<:Function} <: SpectralOperator
     quadratic_term::QuadraticTerm
     function SpectralFunction(f::Function, domain::AbstractDomain,
                               quadratic_term::QuadraticTerm)
-        out = zeros(spectral_size(domain))
+        out = zeros(spectral_size(domain)) |> memory_type(domain)
+        out = complex.(out)
         new{typeof(f)}(f, out, quadratic_term)
     end
 end
@@ -46,9 +47,13 @@ end
 
 @inline function (op::SpectralFunction)(u::AbstractArray)
     out = op.out
+    #println(typeof(out), size(out))
     @unpack U, V, up, padded, transforms, dealiasing_coefficient = op.quadratic_term
     mul!(U, bwd(transforms), padded ? pad!(up, u, typeof(transforms)) : u)
     V .= op.f.(dealiasing_coefficient * U)
     mul!(padded ? up : out, fwd(transforms), V)
+    #println(typeof(out), size(out))
+    #println(typeof(up), size(up))
+    #println(typeof(transforms))
     padded ? unpad!(out, up, typeof(transforms)) / dealiasing_coefficient : up
 end

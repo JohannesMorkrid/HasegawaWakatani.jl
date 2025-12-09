@@ -34,3 +34,14 @@ to reconnect to the session and continue where left off. Usefull for overnight s
 
 # Github tips
 * To track a file ignored by .gitignore do git add -f \<file>
+* GitHub actions with "on: workflow_dispatch:" allows the user to run it manually in the repos
+Actions tab
+* The CompatHelper.yml needs the user to go into Settings > Actions > General > **Allow GitHub Actions to create and approve pull requests** (toggle it on)
+
+# Juliaup
+* If you are struggling with a folder having a constant julia version check 'juliaup override status'
+
+# Hasegawa Wakatani package tips
+* Make sure the broadcasting is done correctly, it is easy to mess up re-assign a variable 
+instead of writing to it elementwise in-place.
+* Having first order derivatives in either the linear or non-linear term does not seem to matter

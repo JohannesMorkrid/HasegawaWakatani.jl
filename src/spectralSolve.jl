@@ -2,7 +2,7 @@
 # If custom outputter is not provided, then resort to default
 # First step is stored during initilization of output
 function spectral_solve(prob::SOP, scheme::SA=MSS3(),
-                        output::O=Output(prob; store_hdf=false);
+                        output::O=Output(prob; store_hdf=false); debug=false,
                         resume::Bool=false) where {SOP<:SpectralODEProblem,
                                                    SA<:AbstractODEAlgorithm,O<:Output}
     # Initialize cache and tracking
@@ -29,8 +29,8 @@ function spectral_solve(prob::SOP, scheme::SA=MSS3(),
             handle_output!(output, step, cache.u, prob, t)
         end
     catch error
-        # Interupt the error, so that the code does not halt
-        showerror(stdout, error)
+        # Interupt the error, so that the code does not halt when not in debug mode
+        debug ? rethrow(error) : showerror(stdout, error)
     end
 
     # Store the cache to be able to resume simulations
