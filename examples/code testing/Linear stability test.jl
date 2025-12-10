@@ -11,7 +11,7 @@ function Linear(du, u, operators, p, t)
     @unpack laplacian, diff_x, diff_y = operators
     η, Ω = eachslice(u; dims=3)
     dη, dΩ = eachslice(du; dims=3)
-    @unpack ν, μ = p
+    @unpack ν, μ, ζ = p
     dη .= ν * laplacian(η) - ζ * diff_y(η) - 2 * ν * κ * diff_x(η)
     dΩ .= μ * laplacian(Ω)
 end
