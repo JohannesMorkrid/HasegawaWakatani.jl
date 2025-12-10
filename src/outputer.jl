@@ -76,7 +76,6 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
                                          FN<:AbstractString,PT<:Function,
                                          SN<:Union{AbstractString,Symbol}}
 
-
         # Prepare initial state
         state, t0 = prepare_initial_state(prob; physical_transform=physical_transform)
 
@@ -100,7 +99,6 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
                                         h5_kwargs=h5_kwargs,
                                         resume=resume)
 
-
         # Setup local (in memory) storage if wanted
         u, t = setup_local_storage(state, t0; store_locally=false) # Currently disabled TODO re-enable
 
@@ -109,7 +107,8 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
             typeof(physical_transform),typeof(h5_kwargs)}(diagnostics, strides, state, t,
                                                           simulation, physical_transform,
                                                           store_hdf, store_locally, true,
-                                                          h5_kwargs, flush_interval, now(), resume)
+                                                          h5_kwargs, flush_interval, now(),
+                                                          resume)
     end
 end
 
@@ -136,9 +135,9 @@ end
   Checks if the output file already exists when not resuming a previous simulation. If it 
   exists, the user is prompted to confirm overwriting the file.
 """
-function check_if_output_file_exists_and_resume_is_false(simulation::HDF5.Group, resume::Bool)
+function check_if_output_file_exists_and_resume_is_false(simulation::HDF5.Group,
+                                                         resume::Bool)
     if !resume && isfile(simulation.file.filename)
-
         println("The output file already exists, and this run is not resuming a previous simulation. Do you want to overwrite it? (y/n)")
         answer = readline()
 
@@ -168,7 +167,7 @@ function setup_hdf5_storage(prob, t0;
 
         # if file already exists it will be deleted and must be created again
         simulation = setup_simulation_group(filename, simulation_name, prob;
-                                        store_hdf=store_hdf, h5_kwargs=h5_kwargs)
+                                            store_hdf=store_hdf, h5_kwargs=h5_kwargs)
     end
 
     if !isnothing(simulation)
@@ -679,8 +678,9 @@ function determine_strides(initial_samples, prob::SpectralODEProblem, total_stor
         @unpack stride, storage_limit = recipe
         context = "($(recipe.method)) "
         # Determine the number of samples to be stored and the stride distance
-        N_samples, stride = determine_sampling_strategy(sample, stride, storage_limit, prob;
-                                                        context=context)
+        N_samples,
+        stride = determine_sampling_strategy(sample, stride, storage_limit, prob;
+                                             context=context)
         # Determine the needed storage
         storage_requirement = compute_storage_need(N_samples, stride, sample; context)
         # Accumulate
@@ -881,8 +881,7 @@ end
   Restores Cache for `scheme` from checkpoint stored in `simulation`.
 """
 function restore_checkpoint(simulation::HDF5.Group, prob::SOP,
-                            scheme::SA) where {
-                                               SOP<:SpectralODEProblem,
+                            scheme::SA) where {SOP<:SpectralODEProblem,
                                                SA<:AbstractODEAlgorithm}
 
     #validate_simulation_group TODO check that dt remains the same, and other parameters

@@ -2,8 +2,8 @@
 # If custom outputter is not provided, then resort to default
 # First step is stored during initilization of output
 function spectral_solve(prob::SOP, scheme::SA=MSS3(),
-                        output::O=Output(prob; store_hdf=false); debug::Bool=false,
-                        ) where {SOP<:SpectralODEProblem,
+                        output::O=Output(prob; store_hdf=false);
+                        debug::Bool=false,) where {SOP<:SpectralODEProblem,
                                                    SA<:AbstractODEAlgorithm,O<:Output}
 
     # # Check whether output file name already exists for new simulations
@@ -59,12 +59,9 @@ function spectral_solve(prob::SOP, scheme::SA=MSS3(),
     return output
 end
 
-
-
-function initialize_solve(prob::SOP, scheme::SA, output::O) where {
-                                               SOP<:SpectralODEProblem,
-                                               SA<:AbstractODEAlgorithm,O<:Output}
-
+function initialize_solve(prob::SOP, scheme::SA,
+                          output::O) where {SOP<:SpectralODEProblem,
+                                            SA<:AbstractODEAlgorithm,O<:Output}
     if output.resume && output.store_hdf && haskey(output.simulation, "checkpoint")
         cache = restore_checkpoint(output.simulation, prob, scheme)
         t = read(output.simulation, "checkpoint/time")
