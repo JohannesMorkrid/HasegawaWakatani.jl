@@ -2,25 +2,25 @@
 # If custom outputter is not provided, then resort to default
 # First step is stored during initilization of output
 function spectral_solve(prob::SOP, scheme::SA=MSS3(),
-                        output::O=Output(prob; store_hdf=false); debug=false,
-                        resume::Bool=false) where {SOP<:SpectralODEProblem,
+                        output::O=Output(prob; store_hdf=false); debug::Bool=false,
+                        ) where {SOP<:SpectralODEProblem,
                                                    SA<:AbstractODEAlgorithm,O<:Output}
 
-    # Check whether output file name already exists for new simulations
-    if !resume && isfile(output.simulation.file.filename)
-
-        println("The output file already exists, and this run is not resuming a previous simulation. Do you want to overwrite it? (y/n)")
-        answer = readline()
-
-        if answer == "y"
-            rm(output.simulation.file.filename)
-        else
-            error("Aborting simulation to prevent overwriting existing file.")
-        end
-    end
+    # # Check whether output file name already exists for new simulations
+    # if !resume && isfile(output.simulation.file.filename)
+    #
+    #     println("The output file already exists, and this run is not resuming a previous simulation. Do you want to overwrite it? (y/n)")
+    #     answer = readline()
+    #
+    #     if answer == "y"
+    #         rm(output.simulation.file.filename)
+    #     else
+    #         error("Aborting simulation to prevent overwriting existing file.")
+    #     end
+    # end
 
     # Initialize cache and tracking
-    cache, t, step = initialize_solve(prob, scheme, output, resume)
+    cache, t, step = initialize_solve(prob, scheme, output)
 
     # Time step
     dt = prob.dt
@@ -61,11 +61,11 @@ end
 
 
 
-function initialize_solve(prob::SOP, scheme::SA, output::O,
-                          resume::Bool) where {
+function initialize_solve(prob::SOP, scheme::SA, output::O) where {
                                                SOP<:SpectralODEProblem,
                                                SA<:AbstractODEAlgorithm,O<:Output}
-    if resume && output.store_hdf && haskey(output.simulation, "checkpoint")
+
+    if output.resume && output.store_hdf && haskey(output.simulation, "checkpoint")
         cache = restore_checkpoint(output.simulation, prob, scheme)
         t = read(output.simulation, "checkpoint/time")
         step = read(output.simulation, "checkpoint/step")

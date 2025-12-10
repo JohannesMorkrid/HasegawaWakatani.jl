@@ -2,7 +2,7 @@
 using HasegawaWakatani
 using CUDA
 
-domain = Domain(256, 256; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32)
+domain = Domain(128, 128; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32)
 
 # Check documentation to see other initial conditions
 ic = initial_condition(isolated_blob, domain)
@@ -31,7 +31,7 @@ end
 parameters = (ν=1e-2, κ=1e-2)
 
 # Time interval
-tspan = [0.0, 20.0]
+tspan = [0.0, 30.0]
 
 # Array of diagnostics want
 diagnostics = @diagnostics [
@@ -41,7 +41,8 @@ diagnostics = @diagnostics [
     cfl(; stride=250, silent=true, storage_limit="2KB"),
     plot_vorticity(; stride=1000),
     plot_potential(; stride=1000),
-    plot_density(; stride=1000)
+    plot_density(; stride=1000),
+    sample_density(; stride=1000)
 ]
 
 # Collection of specifications defining the problem to be solved
@@ -51,11 +52,12 @@ prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt
 
 # The output
 output_file_name = joinpath(@__DIR__, "output", "Garcia 2005 PoP.h5")
+
 output = Output(prob; filename=output_file_name, simulation_name=:parameters,
-                storage_limit="0.5 GB", store_locally=false)
+                storage_limit="0.5 GB", store_locally=false, resume=true)
 
 # Solve and plot
-sol = spectral_solve(prob, MSS3(), output; resume=false)
+sol = spectral_solve(prob, MSS3(), output;)
 
 using Plots
 using LaTeXStrings

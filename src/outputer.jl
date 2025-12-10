@@ -19,6 +19,7 @@
   - `store_locally::Bool`: Whether to store output in memory.
   - `transformed::Bool`: Indicates if the state has been transformed to physical space.
   - `h5_kwargs::K`: Named tuple of keyword arguments for HDF5 storage.
+  - `resume::Bool`: Whether to resume from an existing output file.
   
   # Constructor
   
@@ -39,6 +40,7 @@
   - `store_locally`: Store output in memory (default: `true`).
   - `storage_limit`: Limit for field storage (default: empty string).
   - `h5_kwargs...`: Additional keyword arguments for HDF5 storage (merged with defaults).
+  - `resume`: Resume from existing output file (default: `false`).
 
   # Usage
 
@@ -60,6 +62,7 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
     h5_kwargs::K #Possibly also called a filter
     flush_interval::Int
     last_flush_time::DateTime
+    resume::Bool
 
     function Output(prob::SOP; filename::FN=basename(tempname()) * ".h5",
                     physical_transform::PT=identity,
@@ -68,9 +71,11 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
                     store_locally::Bool=true,
                     storage_limit::AbstractString="",
                     flush_interval::Int=10,
+                    resume::Bool=false,
                     h5_kwargs...) where {SOP<:SpectralODEProblem,
                                          FN<:AbstractString,PT<:Function,
                                          SN<:Union{AbstractString,Symbol}}
+
 
         # Prepare initial state
         state, t0 = prepare_initial_state(prob; physical_transform=physical_transform)
@@ -92,7 +97,9 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
                                         initial_samples=initial_samples,
                                         strides=strides,
                                         store_hdf=store_hdf,
-                                        h5_kwargs=h5_kwargs)
+                                        h5_kwargs=h5_kwargs,
+                                        resume=resume)
+
 
         # Setup local (in memory) storage if wanted
         u, t = setup_local_storage(state, t0; store_locally=false) # Currently disabled TODO re-enable
@@ -102,7 +109,7 @@ mutable struct Output{DV<:AbstractArray{<:Diagnostic},UB<:AbstractArray,T<:Abstr
             typeof(physical_transform),typeof(h5_kwargs)}(diagnostics, strides, state, t,
                                                           simulation, physical_transform,
                                                           store_hdf, store_locally, true,
-                                                          h5_kwargs, flush_interval, now())
+                                                          h5_kwargs, flush_interval, now(), resume)
     end
 end
 
@@ -123,6 +130,28 @@ end
 
 # -------------------------------------- HDF5 Setup ----------------------------------------
 
+"""
+    check_if_output_file_exists(simulation::HDF5.Group, resume::Bool)
+
+  Checks if the output file already exists when not resuming a previous simulation. If it 
+  exists, the user is prompted to confirm overwriting the file.
+"""
+function check_if_output_file_exists_and_resume_is_false(simulation::HDF5.Group, resume::Bool)
+    if !resume && isfile(simulation.file.filename)
+
+        println("The output file already exists, and this run is not resuming a previous simulation. Do you want to overwrite it? (y/n)")
+        answer = readline()
+
+        if answer == "y"
+            rm(simulation.file.filename)
+            return true
+        else
+            error("Aborting simulation to prevent overwriting existing file.")
+        end
+    end
+    return false
+end
+
 function setup_hdf5_storage(prob, t0;
                             filename,
                             simulation_name,
@@ -130,9 +159,18 @@ function setup_hdf5_storage(prob, t0;
                             initial_samples,
                             strides,
                             store_hdf=true,
-                            h5_kwargs=(blosc=3,))
+                            h5_kwargs=(blosc=3,),
+                            resume)
     simulation = setup_simulation_group(filename, simulation_name, prob;
                                         store_hdf=store_hdf, h5_kwargs=h5_kwargs)
+
+    if check_if_output_file_exists_and_resume_is_false(simulation, resume)
+
+        # if file already exists it will be deleted and must be created again
+        simulation = setup_simulation_group(filename, simulation_name, prob;
+                                        store_hdf=store_hdf, h5_kwargs=h5_kwargs)
+    end
+
     if !isnothing(simulation)
         N_steps = compute_number_of_steps(prob)
         for (diagnostic, sample, stride) in zip(diagnostics, initial_samples, strides)
