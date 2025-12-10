@@ -2,7 +2,7 @@
 using HasegawaWakatani
 using CUDA
 
-domain = Domain(128, 128; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32)
+domain = Domain(256, 256; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32)
 
 # Check documentation to see other initial conditions
 ic = initial_condition(isolated_blob, domain)
