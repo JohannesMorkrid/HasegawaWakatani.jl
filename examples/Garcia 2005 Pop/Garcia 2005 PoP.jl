@@ -42,7 +42,6 @@ diagnostics = @diagnostics [
     plot_vorticity(; stride=1000),
     plot_potential(; stride=1000),
     plot_density(; stride=1000),
-    sample_density(; stride=1000)
 ]
 
 # Collection of specifications defining the problem to be solved
