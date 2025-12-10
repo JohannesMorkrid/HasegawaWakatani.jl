@@ -31,7 +31,7 @@ end
 parameters = (ν=1e-2, κ=1e-2)
 
 # Time interval
-tspan = [0.0, 30.0]
+tspan = [0.0, 20.0]
 
 # Array of diagnostics want
 diagnostics = @diagnostics [

@@ -57,10 +57,10 @@ prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt
 # Output
 output_file_name = joinpath(@__DIR__, "../output", "sheath-interchange long time series.h5")
 output = Output(prob; filename=output_file_name, simulation_name=:parameters,
-                storage_limit="1 GB", store_locally=false)
+                storage_limit="1 GB", store_locally=false, resume=true)
 
 ## Solve and plot
-sol = spectral_solve(prob, MSS3(), output; resume=true)
+sol = spectral_solve(prob, MSS3(), output;)
 
 using SMTPClient
 send_mail("g=1e-3 finnished, go analyse the data and see if it has different PDF!")

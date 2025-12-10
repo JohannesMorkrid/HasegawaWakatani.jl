@@ -84,17 +84,20 @@ end
 
 ## Resolution convergence test
 resolutions = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
-_, convergence1 = test_resolution_convergence(prob, quadratic_function, analytical_solution,
-                                              resolutions, MSS1(); oneDimensional=true)
-_, convergence2 = test_resolution_convergence(prob, quadratic_function, analytical_solution,
-                                              resolutions, MSS2(); oneDimensional=true)
-_, convergence3 = test_resolution_convergence(prob, quadratic_function, analytical_solution,
-                                              resolutions, MSS3(); oneDimensional=true)
+_,
+convergence1 = test_resolution_convergence(prob, quadratic_function, analytical_solution,
+                                           resolutions, MSS1(); oneDimensional=true)
+_,
+convergence2 = test_resolution_convergence(prob, quadratic_function, analytical_solution,
+                                           resolutions, MSS2(); oneDimensional=true)
+_,
+convergence3 = test_resolution_convergence(prob, quadratic_function, analytical_solution,
+                                           resolutions, MSS3(); oneDimensional=true)
 
 plot(resolutions, convergence1; xaxis=:log2, yaxis=:log, label="MSS1")
 plot!(resolutions, convergence2; xaxis=:log2, yaxis=:log, label="MSS2", color="dark green")
 plot!(resolutions, convergence3; xaxis=:log2, yaxis=:log, label="MSS3", color="orange")
-plot!(resolutions[1:end-4], 0.5 * exp.(-0.5 * resolutions)[1:end-4];
+plot!(resolutions[1:(end-4)], 0.5 * exp.(-0.5 * resolutions)[1:(end-4)];
       label=L"\frac{1}{2}\exp\left(-\frac{N}{2}\right)", linestyle=:dash,
       xaxis=:log2, yaxis=:log, xticks=resolutions, xlabel=L"N_x \wedge N_y",
       ylabel=L"||U-u_a||/N_xN_y",

@@ -6,19 +6,6 @@ function spectral_solve(prob::SOP, scheme::SA=MSS3(),
                         debug::Bool=false,) where {SOP<:SpectralODEProblem,
                                                    SA<:AbstractODEAlgorithm,O<:Output}
 
-    # # Check whether output file name already exists for new simulations
-    # if !resume && isfile(output.simulation.file.filename)
-    #
-    #     println("The output file already exists, and this run is not resuming a previous simulation. Do you want to overwrite it? (y/n)")
-    #     answer = readline()
-    #
-    #     if answer == "y"
-    #         rm(output.simulation.file.filename)
-    #     else
-    #         error("Aborting simulation to prevent overwriting existing file.")
-    #     end
-    # end
-
     # Initialize cache and tracking
     cache, t, step = initialize_solve(prob, scheme, output)
 

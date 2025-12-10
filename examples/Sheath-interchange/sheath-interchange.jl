@@ -65,10 +65,10 @@ output_file_name = joinpath(@__DIR__, "output", "sheath-interchange_example.h5")
 output = Output(prob; filename=output_file_name, simulation_name=:parameters,
                 #physical_transform=inverse_transformation!,
                 storage_limit="1 GB",
-                store_locally=false)
+                store_locally=false, resume=true)
 
 ## Solve and plot
-sol = spectral_solve(prob, MSS3(), output; resume=false)
+sol = spectral_solve(prob, MSS3(), output;)
 
 using SMTPClient
 send_mail("Simulation finnished!"; attachment="benkadda.gif")

@@ -142,7 +142,6 @@ function check_if_output_file_exists_and_resume_is_false(simulation::HDF5.Group,
         answer = readline()
 
         if answer == "y"
-            rm(simulation.file.filename)
             return true
         else
             error("Aborting simulation to prevent overwriting existing file.")
@@ -166,6 +165,7 @@ function setup_hdf5_storage(prob, t0;
     if check_if_output_file_exists_and_resume_is_false(simulation, resume)
 
         # if file already exists it will be deleted and must be created again
+        rm(simulation.file.filename)
         simulation = setup_simulation_group(filename, simulation_name, prob;
                                             store_hdf=store_hdf, h5_kwargs=h5_kwargs)
     end

@@ -29,7 +29,7 @@ function inverse_transform!(U::V) where {V<:AbstractArray}
 end
 
 output_file_name = joinpath(@__DIR__, "output", "non-linear diffusion.h5")
-output = Output(prob; filename=output_file_name, physical_transform=inverse_transform!)
+output = Output(prob; filename=output_file_name, physical_transform=(inverse_transform!))
 
 # Solve and plot
 sol = spectral_solve(prob, MSS3(), output)
@@ -37,15 +37,18 @@ sol = spectral_solve(prob, MSS3(), output)
 ## TODO update the plots below
 ## Time convergence test
 timesteps = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5]
-_, convergence1 = test_timestep_convergence(prob, HeatEquationAnalyticalSolution2,
-                                            timesteps,
-                                            MSS1(); physical_transform=inverse_transform!)
-_, convergence2 = test_timestep_convergence(prob, HeatEquationAnalyticalSolution2,
-                                            timesteps,
-                                            MSS2(); physical_transform=inverse_transform!)
-_, convergence3 = test_timestep_convergence(prob, HeatEquationAnalyticalSolution2,
-                                            timesteps,
-                                            MSS3(); physical_transform=inverse_transform!)
+_,
+convergence1 = test_timestep_convergence(prob, HeatEquationAnalyticalSolution2,
+                                         timesteps,
+                                         MSS1(); physical_transform=(inverse_transform!))
+_,
+convergence2 = test_timestep_convergence(prob, HeatEquationAnalyticalSolution2,
+                                         timesteps,
+                                         MSS2(); physical_transform=(inverse_transform!))
+_,
+convergence3 = test_timestep_convergence(prob, HeatEquationAnalyticalSolution2,
+                                         timesteps,
+                                         MSS3(); physical_transform=(inverse_transform!))
 plot(timesteps, convergence1; xaxis=:log, yaxis=:log, label="MSS1")
 plot!(timesteps, convergence2; xaxis=:log, yaxis=:log, label="MSS2", color="dark green")
 plot!(timesteps, convergence3; xaxis=:log, yaxis=:log, label="MSS3", color="orange")
@@ -68,23 +71,26 @@ end
 
 ## Resolution convergence test
 resolutions = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
-_, convergence1 = test_resolution_convergence(prob, log_gaussian,
-                                              HeatEquationAnalyticalSolution2,
-                                              resolutions, MSS1();
-                                              physical_transform=inverse_transform!)
-_, convergence2 = test_resolution_convergence(prob, log_gaussian,
-                                              HeatEquationAnalyticalSolution2,
-                                              resolutions, MSS2();
-                                              physical_transform=inverse_transform!)
-_, convergence3 = test_resolution_convergence(prob, log_gaussian,
-                                              HeatEquationAnalyticalSolution2,
-                                              resolutions, MSS3();
-                                              physical_transform=inverse_transform!)
+_,
+convergence1 = test_resolution_convergence(prob, log_gaussian,
+                                           HeatEquationAnalyticalSolution2,
+                                           resolutions, MSS1();
+                                           physical_transform=(inverse_transform!))
+_,
+convergence2 = test_resolution_convergence(prob, log_gaussian,
+                                           HeatEquationAnalyticalSolution2,
+                                           resolutions, MSS2();
+                                           physical_transform=(inverse_transform!))
+_,
+convergence3 = test_resolution_convergence(prob, log_gaussian,
+                                           HeatEquationAnalyticalSolution2,
+                                           resolutions, MSS3();
+                                           physical_transform=(inverse_transform!))
 
 plot(resolutions, convergence1; xaxis=:log2, yaxis=:log, label="MSS1")
 plot!(resolutions, convergence2; xaxis=:log2, yaxis=:log, label="MSS2", color="dark green")
 plot!(resolutions, convergence3; xaxis=:log2, yaxis=:log, label="MSS3", color="orange")
-plot!(resolutions[1:end-4], 0.5 * exp.(-0.5 * resolutions)[1:end-4];
+plot!(resolutions[1:(end-4)], 0.5 * exp.(-0.5 * resolutions)[1:(end-4)];
       label=L"\frac{1}{2}\exp\left(-\frac{N}{2}\right)", linestyle=:dash,
       xaxis=:log2, yaxis=:log, xticks=resolutions, xlabel=L"N_x \wedge N_y",
       ylabel=L"||U-u_a||/N_xN_y",

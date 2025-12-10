@@ -19,7 +19,8 @@ end
 
 # Non-linear operator
 function NonLinear(du, u, operators, p, t)
-    @unpack laplacian, solve_phi, poisson_bracket, quadratic_term, diff_x, diff_y = operators
+    @unpack laplacian, solve_phi, poisson_bracket, quadratic_term, diff_x,
+            diff_y = operators
     η, Ω = eachslice(u; dims=3)
     dη, dΩ = eachslice(du; dims=3)
     @unpack κ, ν = p
@@ -53,12 +54,12 @@ inverse_transformation!(u) = @. u[:, :, 1] = exp(u[:, :, 1]) - 1
 # The output
 output_file_name = joinpath(@__DIR__, "output", "Kube 2011 PoP.h5")
 output = Output(prob; filename=output_file_name, simulation_name=:parameters,
-                physical_transform=inverse_transformation!, storage_limit="0.5 GB",
-                store_locally=false)
+                physical_transform=(inverse_transformation!), storage_limit="0.5 GB",
+                store_locally=false, resume=false)
 
 # Solve
-sol = spectral_solve(prob, MSS3(), output; resume=false)
+sol = spectral_solve(prob, MSS3(), output;)
 
 using Plots
-plot(output.simulation["Radial COM/t"][1:end-1],
-     output.simulation["Radial COM/data"][2, 1:end-1])
+plot(output.simulation["Radial COM/t"][1:(end-1)],
+     output.simulation["Radial COM/data"][2, 1:(end-1)])

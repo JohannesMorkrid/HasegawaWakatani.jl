@@ -67,10 +67,10 @@ prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt
 # Output
 output_file_name = joinpath(@__DIR__, "output", "Bisai.h5")
 output = Output(prob; filename=output_file_name, simulation_name=:parameters,
-                store_locally=false)
+                store_locally=false, resume=true)
 
 # Solve and plot
-sol = spectral_solve(prob, MSS3(), output; resume=true)
+sol = spectral_solve(prob, MSS3(), output;)
 
 # bisai_php_19_052509 gives Lₓ = L_y = 160ρₛ, g = 1e-3, 128-modes
 # bisai_php_12_072520 gives dt = \omega_c^{-1}, g = 8e-4

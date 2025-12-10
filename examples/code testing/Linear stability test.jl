@@ -50,10 +50,10 @@ prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt
 # The output
 output_file_name = joinpath(@__DIR__, "output", "linear-stability.h5")
 output = Output(prob; filename=output_file_name, simulation_name=:parameters,
-                storage_limit="100 MB")
+                storage_limit="100 MB", resume=true)
 
 # Solve
-sol = spectral_solve(prob, MSS3(), output; resume=false)
+sol = spectral_solve(prob, MSS3(), output;)
 
 ## ----------------------------------- Mode Andalysis --------------------------------------
 
