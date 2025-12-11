@@ -283,9 +283,14 @@ end
 function write_attributes(simulation, prob::SpectralODEProblem)
     write_attribute(simulation, "dt", prob.dt)
     write_attributes(simulation, prob.domain)
-    # TODO add multiple dispatch to this
     for (key, val) in pairs(prob.p)
         write_attribute(simulation, string(key), val)
+    end
+
+    # Store the config file used to create the Output struct
+    configfile = Base.source_path()
+    !isempty(configfile) && open(configfile, "r") do file
+        write_attribute(simulation, "config-file", read(file, String))
     end
 end
 
