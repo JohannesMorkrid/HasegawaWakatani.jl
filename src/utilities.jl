@@ -27,6 +27,14 @@ function log_gaussian(x, y; A=1, B=1, l=1, lx=l, ly=l, x0=0, y0=0)
     log(gaussian(x, y; A=A, B=B, lx=lx, ly=ly, x0=x0, y0=y0))
 end
 
+function gammaX(x, y; A=1, B=0, l=1, lx=l, ly=l, x0=0, y0=0)
+    # Corrected so that the peak is at x0,y0
+    x0 += 1.0
+    x <= x0 ? A * (x0 - x) * exp(1 - (x0 - x) / lx - (y - y0)^2 / (2 * ly^2)) + B : B
+end
+
+const gamma = gammaX
+
 sinusoidal(x, y; Lx=1, Ly=1, n=1, m=1) = sin(2 * π * n * x / Lx) * cos(2 * π * m * y / Ly)
 
 sinusoidalX(x, y; L=1, N=1) = sin(2 * π * N * x / L)
@@ -58,19 +66,9 @@ function random_crossphased(domain::AbstractDomain; value=10^-6, cross_phase=pi 
     [real(ifft(n_hat));;; real(ifft(phi_hat))]
 end
 
-function isolated_blob(domain::AbstractDomain; density::Symbol=:lin, kwargs...)
-    print(kwargs)
-    isolated_blob(domain, Val(density); kwargs...)
-end
-
-function isolated_blob(domain::AbstractDomain, ::Val{:lin}; kwargs...)
-    u0 = initial_condition(gaussian, domain; kwargs...)
-    cat(u0, zero(u0); dims=3)
-end
-
-function isolated_blob(domain::AbstractDomain, ::Val{:log}; kwargs...)
-    u0 = initial_condition(log_gaussian, domain; kwargs...)
-    cat(u0, zero(u0); dims=3)
+function isolated_blob(domain::AbstractDomain; blob=gaussian, transform=identity, kwargs...)
+    u0 = initial_condition(blob, domain; kwargs...)
+    cat(transform.(u0), zero(u0); dims=3)
 end
 
 broadcastable_ic(::typeof(random_phase)) = Val(false)
