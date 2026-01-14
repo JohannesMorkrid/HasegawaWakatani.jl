@@ -6,16 +6,13 @@
 
 struct SpectralFunction{F<:Function} <: SpectralOperator
     f::F
-    out::AbstractArray # TODO specialize?
-    #args, kwargs? TODO perhaps expand upon this
     quadratic_term::QuadraticTerm
-    function SpectralFunction(f::Function, domain::AbstractDomain,
-                              quadratic_term::QuadraticTerm)
-        out = zeros(spectral_size(domain)) |> memory_type(domain)
-        out = complex.(out)
-        new{typeof(f)}(f, out, quadratic_term)
+    function SpectralFunction(f::Function, quadratic_term::QuadraticTerm)
+        new{typeof(f)}(f, quadratic_term)
     end
 end
+
+# ------------------------------------- Constructors ---------------------------------------
 
 function operator_dependencies(::Union{Val{:reciprocal},Val{:spectral_exp},
                                        Val{:spectral_expm1},
@@ -25,35 +22,36 @@ end
 
 function build_operator(::Val{:reciprocal}, domain::AbstractDomain; quadratic_term,
                         kwargs...)
-    SpectralFunction(u -> div(1, u), domain, quadratic_term)
+    SpectralFunction(u -> div(1, u), quadratic_term)
 end
 
 function build_operator(::Val{:spectral_exp}, domain::AbstractDomain; quadratic_term,
                         kwargs...)
-    SpectralFunction(exp, domain, quadratic_term)
+    SpectralFunction(exp, quadratic_term)
 end
 
 function build_operator(::Val{:spectral_expm1}, domain::AbstractDomain; quadratic_term,
                         kwargs...)
-    SpectralFunction(expm1, domain, quadratic_term)
+    SpectralFunction(expm1, quadratic_term)
 end
 
 function build_operator(::Val{:spectral_log}, domain::AbstractDomain; quadratic_term,
                         kwargs...)
-    SpectralFunction(log, domain, quadratic_term)
+    SpectralFunction(log, quadratic_term)
 end
 
-# -------------------------------------- Main Method ---------------------------------------
+# ------------------------------------- Main Methods ---------------------------------------
 
-@inline function (op::SpectralFunction)(u::AbstractArray)
-    out = op.out
-    #println(typeof(out), size(out))
+# In-place method
+function (op::SpectralFunction)(du::T, u::T, args...; kwargs...) where {T<:AbstractArray}
     @unpack U, V, up, padded, transforms, dealiasing_coefficient = op.quadratic_term
     mul!(U, bwd(transforms), padded ? pad!(up, u, typeof(transforms)) : u)
-    V .= op.f.(dealiasing_coefficient * U)
-    mul!(padded ? up : out, fwd(transforms), V)
-    #println(typeof(out), size(out))
-    #println(typeof(up), size(up))
-    #println(typeof(transforms))
-    padded ? unpad!(out, up, typeof(transforms)) / dealiasing_coefficient : up
+    @. V = op.f(dealiasing_coefficient * U, args...; kwargs...)
+    mul!(padded ? up : du, fwd(transforms), V)
+    padded ? du .= unpad!(du, up, typeof(transforms)) ./ dealiasing_coefficient : up
+end
+
+# Out-of-place
+function (op::SpectralFunction)(u::T, args...; kwargs...) where {T<:AbstractArray}
+    op(similar(u), u, args...; kwargs...)
 end
