@@ -14,7 +14,7 @@ include("domains/domain.jl")
 export Domain, wave_vectors, get_points, spectral_size, spectral_length, get_transform_plans
 
 include("operators/spectralOperators.jl")
-export OperatorRecipe, build_operators # TODO perhaps remove and swap with @op
+export OperatorRecipe, build_operators, build_operator # TODO perhaps remove and swap with @op
 # reciprocal, spectral_exp, spectral_expm1,
 # spectral_log, hyper_diffusion
 
