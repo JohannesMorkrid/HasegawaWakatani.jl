@@ -4,30 +4,23 @@
 
 # ------------------------------------ Fourier Domain --------------------------------------
 
-# function operator_type(::Union{Val{:diff_x}, Val{:diff_y}, Val{:laplacian}},
-#                        ::Type{_}) where {_}
-#     ElwiseOperator
-# end
-
-# TODO check if operators like laplacians and diff_xx and diff_yy should be Complex 
-
 # -------------------------------- Construction Interface ----------------------------------
 
 function build_operator(::Val{:diff_x}, domain::Domain; order=1, kwargs...)
     ElwiseOperator(im .* transpose(domain.kx); order=order)
 end
 
-# function build_operator(::Val{:diff_xx}, domain::Domain; order=1, kwargs...)
-#     build_operator(Val(:diff_x), domain; order = 2 * order)
-# end
+function build_operator(::Val{:diff_xx}, domain::Domain; order=1, kwargs...)
+    build_operator(Val(:diff_x), domain; order=2 * order)
+end
 
 function build_operator(::Val{:diff_y}, domain::Domain; order=1, kwargs...)
     ElwiseOperator(im .* domain.ky; order=order)
 end
 
-# function build_operator(::Val{:diff_yy}, domain::Domain; order=1, kwargs...)
-#     build_operator(Val(:diff_y), domain; order = 2 * order)
-# end
+function build_operator(::Val{:diff_yy}, domain::Domain; order=1, kwargs...)
+    build_operator(Val(:diff_y), domain; order=2 * order)
+end
 
 # Helper function 
 function get_laplacian(domain::Domain)
