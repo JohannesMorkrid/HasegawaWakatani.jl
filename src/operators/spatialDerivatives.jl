@@ -56,3 +56,45 @@ end
 
 #     return D
 # end
+
+# ---------------------------------- Compound Operators ------------------------------------
+
+# Quite similar to the poisson bracket method
+struct GradDotGradOperator{T<:AbstractArray} <: NonLinearOperator
+    diff_x::LinearOperator
+    diff_y::LinearOperator
+    quadratic_term::QuadraticTerm
+    left::T
+    right::T
+    tmp::T
+    function GradDotGradOperator(domain::AbstractDomain, diff_x::LinearOperator,
+                                 diff_y::LinearOperator, quadratic_term::QuadraticTerm)
+        tmp = zeros(spectral_size(domain)) |> domain.MemoryType{complex(domain.precision)}
+        left = zero(tmp)
+        right = zero(tmp)
+        new{typeof(tmp)}(diff_x, diff_y, quadratic_term, left, right, tmp)
+    end
+end
+
+function operator_dependencies(::Val{:grad_dot_grad}, ::Type{_}) where {_}
+    [OperatorRecipe(:diff_x), OperatorRecipe(:diff_y), OperatorRecipe(:quadratic_term)]
+end
+
+function build_operator(::Val{:grad_dot_grad}, domain::Domain; diff_x, diff_y,
+                        quadratic_term, kwargs...)
+    GradDotGradOperator(domain, diff_x, diff_y, quadratic_term)
+end
+
+function (op::GradDotGradOperator)(out::T, u::T, v::T) where {T<:AbstractArray}
+    @unpack left, right, tmp, diff_x, diff_y, quadratic_term = op
+
+    diff_x(left, u)
+    diff_x(right, v)
+    quadratic_term(out, left, right)
+    diff_y(left, u)
+    diff_y(right, v)
+    quadratic_term(tmp, left, right)
+    out .+= tmp
+end
+
+(op::GradDotGradOperator)(u::T, v::T) where {T<:AbstractArray} = op(similar(u), u, v)
