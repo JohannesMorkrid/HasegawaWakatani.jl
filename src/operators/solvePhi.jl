@@ -150,11 +150,11 @@ function (op::SolvePhiNonBoussinesq)(out::T, n::T, ϖ::T) where {T<:AbstractArra
 
     # Compute residuals
     res = norm(C2 - ϖ)
-    prev_res = res
     iters = 0
+    reltol = rtol * norm(ϖ)
 
     # Iterate to approximately solve for potential ϕ
-    while res > rtol && iters < maxiters
+    while res > max(reltol, atol) && iters < maxiters
         # Compute ∇_⟂ϕ_i then (∇_⟂η)⋅(∇_⟂ϕ_i) and sum up while computing ϖᵢ = ∇⋅(n∇ϕᵢ) 
         # 1) C1 = (∂ₓϕ₀)_hat
         diff_x(C1, out)
@@ -193,11 +193,99 @@ function (op::SolvePhiNonBoussinesq)(out::T, n::T, ϖ::T) where {T<:AbstractArra
         out .= phi .- out
 
         # Update residuals and iters count
-        res = norm(C2 - ϖ) / length(ϖ)
+        res = norm(C2 - ϖ)
         iters += 1
     end
     return out
 end
+
+function (op::SolvePhiNonBoussinesq)(out::T, η::T, ϖ::T,
+                                     density::Val{:log}) where {T<:AbstractArray}
+    @unpack laplacian_inv, diff_x, diff_y, quadratic_term, C1, C2, phi, N, dηdx, dηdy = op
+    @unpack atol, rtol, maxiters = op
+    @unpack U, V, up, vp, padded, transforms, dealiasing_coefficient = quadratic_term
+
+    #Initial guess ϕ₀ = ∇⁻²(ϖ/N)
+    mul!(U, bwd(transforms), padded ? pad!(up, η, typeof(transforms)) : η)
+    mul!(V, bwd(transforms), padded ? pad!(vp, ϖ, typeof(transforms)) : ϖ)
+    # Compute N = exp(η)
+    U .*= dealiasing_coefficient
+    N .= exp.(U)
+    @. V ./= N
+    mul!(padded ? vp : C1, fwd(transforms), V)
+    padded ? unpad!(C1, vp, typeof(transforms)) : C1
+    phi .= laplacian_inv .* C1
+
+    # Compute η = ln(N) (U = η, V = ϖ/N, phi = ϕ₀, C1 = (ϖ/N)_hat unpadded)
+    mul!(padded ? up : C1, fwd(transforms), U)
+    padded ? C1 .= unpad!(C1, up, typeof(transforms)) ./ dealiasing_coefficient : C1
+    # C1 = ̂η at this stage, N = N, U = η, V = ϖ/N 
+
+    # Compute ∇_⟂η, remains constant for all iterations
+    diff_x(C2, C1)
+    mul!(dηdx, bwd(transforms), padded ? pad!(up, C2, typeof(transforms)) : C2)
+    dηdx .*= dealiasing_coefficient
+    diff_y(C2, C1)
+    mul!(dηdy, bwd(transforms), padded ? pad!(vp, C2, typeof(transforms)) : C2)
+    dηdy .*= dealiasing_coefficient
+
+    # To compare to ϖ
+    C2 .= zero.(C2)
+    out .= phi
+
+    # Compute residuals
+    res = norm(C2 - ϖ)
+    iters = 0
+    reltol = rtol * norm(ϖ)
+
+    # Iterate to approximately solve for potential ϕ
+    while res > max(reltol, atol) && iters < maxiters
+        # Compute ∇_⟂ϕ_i then (∇_⟂η)⋅(∇_⟂ϕ_i) and sum up while computing ϖᵢ = ∇⋅(n∇ϕᵢ) 
+        # 1) C1 = (∂ₓϕ₀)_hat
+        diff_x(C1, out)
+        # 2) U = (∂ₓϕ₀)_p
+        mul!(U, bwd(transforms), padded ? pad!(up, C1, typeof(transforms)) : C1) # iFFT
+        # 3) V = (N∂ₓϕ₀)_p
+        V .= N .* U
+        # 4) C2 = (N∂ₓϕ₀)_hat
+        mul!(padded ? up : C2, fwd(transforms), V)                               # FFT
+        padded ? unpad!(C2, up, typeof(transforms)) : C2
+        # 5) C2 = (∂ₓ(N∂ₓϕ₀))_hat
+        diff_x(C2, C2)
+        # 6) V = (∂ₓη∂ₓϕ₀)_p
+        V .= dηdx .* U
+        # 7) C1 = (∂yϕ₀)_hat
+        diff_y(C1, out)
+        # 8) U = (∂yϕ₀)_p
+        mul!(U, bwd(transforms), padded ? pad!(up, C1, typeof(transforms)) : C1) # iFFT
+        # 9) V = (∂ₓη∂ₓϕ₀ + ∂yη∂yϕ₀)_p
+        V .+= dηdy .* U
+        # 10) out = (∂ₓη∂ₓϕ₀ + ∂yη∂yϕ₀)_hat
+        mul!(padded ? vp : out, fwd(transforms), V)                               # FFT
+        padded ? unpad!(out, vp, typeof(transforms)) : out
+        # 11) U = (N∂yϕ₀)_p
+        U .*= N
+        # 12) C1 = (N∂yϕ₀)_hat
+        mul!(padded ? up : C1, fwd(transforms), U)                               # FFT
+        padded ? unpad!(C1, up, typeof(transforms)) : C1
+        # 13) C1 = (∂y(N∂yϕ₀))_hat
+        diff_y(C1, C1)
+        # 14) C2 = ϖₘ = (∂ₓ(N∂ₓϕ₀) + ∂y(N∂yϕ₀))_hat
+        C2 .+= C1
+        # 15) out = Lϕₘ = ∇⁻²(∇_⟂η⋅∇_⟂)ϕ_m
+        out .*= laplacian_inv
+        # 16) ϕₘ₊₁ = ϕ₀ - Lϕₘ
+        out .= phi .- out
+
+        # Update residuals and iters count
+        res = norm(C2 - ϖ)
+        iters += 1
+    end
+    return out
+end
+
+# Out-of-place (non-boussinesq, no-relaxation)
+(op::SolvePhiNonBoussinesq)(u::T, ϖ::T) where {T<:AbstractArray} = op(similar(u), u, ϖ)
 
 # In-place (non-boussinesq, relaxation)
 function (op::SolvePhiRelaxation)(out::T, η::T, ϖ::T) where {T<:AbstractArray}
@@ -212,4 +300,4 @@ function (op::SolvePhiRelaxation)(out::T, η::T, ϖ::T) where {T<:AbstractArray}
 end
 
 # Out-of-place (non-boussinesq, relaxation)
-(op::SolvePhiRelaxation)(η::T, ϖ::T) where {T<:AbstractArray} = op(out, η, ϖ)
+(op::SolvePhiRelaxation)(η::T, ϖ::T) where {T<:AbstractArray} = op(similar(η), η, ϖ)
