@@ -17,7 +17,8 @@ struct SolvePhiSimplified{T<:AbstractArray} <: SolvePhi
 end
 
 # 2) Non-Boussinesq, no relaxation:
-struct SolvePhiNonBoussinesq{T<:AbstractArray,S<:AbstractArray,P<:AbstractArray} <: SolvePhi
+struct SolvePhiNonBoussinesq{density,T<:AbstractArray,
+                             S<:AbstractArray,P<:AbstractArray} <: SolvePhi
     laplacian_inv::T
     diff_x::LinearOperator
     diff_y::LinearOperator
@@ -33,7 +34,7 @@ struct SolvePhiNonBoussinesq{T<:AbstractArray,S<:AbstractArray,P<:AbstractArray}
     maxiters::Number
 
     function SolvePhiNonBoussinesq(domain, diff_x, diff_y, quadratic_term;
-                                   atol, rtol, maxiters)
+                                   atol, rtol, maxiters, density::Symbol=:log)
         laplacian = get_laplacian(domain)
         laplacian_inv = laplacian .^ -1
         @allowscalar laplacian_inv[1] = 0 # First entry will always be NaN or Inf
@@ -44,9 +45,10 @@ struct SolvePhiNonBoussinesq{T<:AbstractArray,S<:AbstractArray,P<:AbstractArray}
         N = zero(quadratic_term.U)
         dηdx = zero(N)
         dηdy = zero(N)
-        new{typeof(laplacian_inv),typeof(C1),typeof(N)}(laplacian_inv, diff_x, diff_y,
-                                                        quadratic_term, phi, C1, C2, N,
-                                                        dηdx, dηdy, atol, rtol, maxiters)
+        new{density,typeof(laplacian_inv),typeof(C1),typeof(N)}(laplacian_inv, diff_x,
+                                                                diff_y, quadratic_term, phi,
+                                                                C1, C2, N, dηdx, dηdy, atol,
+                                                                rtol, maxiters)
     end
 end
 
@@ -94,9 +96,10 @@ end
 
 # Construct non-bousinesq, no-relaxation case:
 function _build_operator(::Val{:solve_phi}, domain::Domain, boussinesq::Val{false},
-                         relaxation::Val{false}; diff_x, diff_y, quadratic_term, atol, rtol,
-                         maxiters, kwargs...)
-    SolvePhiNonBoussinesq(domain, diff_x, diff_y, quadratic_term; atol, rtol, maxiters)
+                         relaxation::Val{false}; diff_x, diff_y, quadratic_term, atol=1e-3,
+                         rtol=1e-6, maxiters=100, density=:log, kwargs...)
+    SolvePhiNonBoussinesq(domain, diff_x, diff_y, quadratic_term;
+                          atol, rtol, maxiters, density)
 end
 
 # Construct non-bousinesq, relaxation case:
@@ -116,7 +119,7 @@ end
 (op::SolvePhiSimplified)(u::T) where {T<:AbstractArray} = op(similar(u), u)
 
 # In-place (non-boussinesq)
-function (op::SolvePhiNonBoussinesq)(out::T, n::T, ϖ::T) where {T<:AbstractArray}
+function (op::SolvePhiNonBoussinesq{:linear})(out::T, n::T, ϖ::T) where {T<:AbstractArray}
     @unpack laplacian_inv, diff_x, diff_y, quadratic_term, C1, C2, phi, N, dηdx, dηdy = op
     @unpack atol, rtol, maxiters = op
     @unpack U, V, up, vp, padded, transforms, dealiasing_coefficient = quadratic_term
@@ -199,8 +202,7 @@ function (op::SolvePhiNonBoussinesq)(out::T, n::T, ϖ::T) where {T<:AbstractArra
     return out
 end
 
-function (op::SolvePhiNonBoussinesq)(out::T, η::T, ϖ::T,
-                                     density::Val{:log}) where {T<:AbstractArray}
+function (op::SolvePhiNonBoussinesq{:log})(out::T, η::T, ϖ::T) where {T<:AbstractArray}
     @unpack laplacian_inv, diff_x, diff_y, quadratic_term, C1, C2, phi, N, dηdx, dηdy = op
     @unpack atol, rtol, maxiters = op
     @unpack U, V, up, vp, padded, transforms, dealiasing_coefficient = quadratic_term
