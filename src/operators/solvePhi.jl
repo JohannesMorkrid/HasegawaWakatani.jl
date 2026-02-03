@@ -130,15 +130,16 @@ end
 # ------------------------------------- Main Methods ---------------------------------------
 
 # In-place (boussinesq)
-function (op::SolvePhiSimplified)(out::T, u::T) where {T<:AbstractArray}
+function (op::SolvePhiSimplified)(out::AbstractArray, u::AbstractArray)
     out .= op.laplacian_inv .* u
 end
 
 # Out-of-place (boussinesq)
-(op::SolvePhiSimplified)(u::T) where {T<:AbstractArray} = op(similar(u), u)
+(op::SolvePhiSimplified)(u::AbstractArray) = op(similar(u), u)
 
 # In-place (non-boussinesq)
-function (op::SolvePhiNonBoussinesq{:linear})(out::T, n::T, ϖ::T) where {T<:AbstractArray}
+function (op::SolvePhiNonBoussinesq{:linear})(out::AbstractArray, n::AbstractArray,
+                                              ϖ::AbstractArray)
     @unpack laplacian_inv, diff_x, diff_y, quadratic_term, C1, C2, phi, N, dηdx, dηdy = op
     @unpack atol, rtol, maxiters = op
     @unpack U, V, up, vp, padded, transforms, dealiasing_coefficient = quadratic_term
@@ -221,7 +222,8 @@ function (op::SolvePhiNonBoussinesq{:linear})(out::T, n::T, ϖ::T) where {T<:Abs
     return out
 end
 
-function (op::SolvePhiNonBoussinesq{:log})(out::T, η::T, ϖ::T) where {T<:AbstractArray}
+function (op::SolvePhiNonBoussinesq{:log})(out::AbstractArray, η::AbstractArray,
+                                           ϖ::AbstractArray)
     @unpack laplacian_inv, diff_x, diff_y, quadratic_term, C1, C2, phi, N, dηdx, dηdy = op
     @unpack atol, rtol, maxiters = op
     @unpack U, V, up, vp, padded, transforms, dealiasing_coefficient = quadratic_term
@@ -306,10 +308,11 @@ function (op::SolvePhiNonBoussinesq{:log})(out::T, η::T, ϖ::T) where {T<:Abstr
 end
 
 # Out-of-place (non-boussinesq, no-relaxation)
-(op::SolvePhiNonBoussinesq)(u::T, ϖ::T) where {T<:AbstractArray} = op(similar(u), u, ϖ)
+(op::SolvePhiNonBoussinesq)(u::AbstractArray, ϖ::AbstractArray) = op(similar(u), u, ϖ)
 
 # In-place (non-boussinesq, relaxation)
-function (op::SolvePhiRelaxation{:linear})(out::T, n::T, ϖ::T) where {T<:AbstractArray}
+function (op::SolvePhiRelaxation{:linear})(out::AbstractArray, n::AbstractArray,
+                                           ϖ::AbstractArray)
     @unpack laplacian_inv, diff_x, diff_y, quadratic_term, C1, C2, N, dηdx, dηdy = op
     @unpack initial_phi, previous_phi, w, atol, rtol, maxiters = op
     @unpack U, V, up, vp, padded, transforms, dealiasing_coefficient = quadratic_term
@@ -397,7 +400,8 @@ function (op::SolvePhiRelaxation{:linear})(out::T, n::T, ϖ::T) where {T<:Abstra
     return out
 end
 
-function (op::SolvePhiRelaxation{:log})(out::T, η::T, ϖ::T) where {T<:AbstractArray}
+function (op::SolvePhiRelaxation{:log})(out::AbstractArray, η::AbstractArray,
+                                        ϖ::AbstractArray)
     @unpack laplacian_inv, diff_x, diff_y, quadratic_term, C1, C2, N, dηdx, dηdy = op
     @unpack initial_phi, previous_phi, w, atol, rtol, maxiters = op
     @unpack U, V, up, vp, padded, transforms, dealiasing_coefficient = quadratic_term
@@ -487,4 +491,4 @@ function (op::SolvePhiRelaxation{:log})(out::T, η::T, ϖ::T) where {T<:Abstract
 end
 
 # Out-of-place (non-boussinesq, relaxation)
-(op::SolvePhiRelaxation)(u::T, ϖ::T) where {T<:AbstractArray} = op(similar(u), u, ϖ)
+(op::SolvePhiRelaxation)(u::AbstractArray, ϖ::AbstractArray) = op(similar(u), u, ϖ)
