@@ -23,8 +23,10 @@ function NonLinear(du, u, operators, p, t)
     dθ, dΩ = eachslice(du; dims=3)
     @unpack diff_y, poisson_bracket, solve_phi = operators
     ϕ = solve_phi(Ω)
-    dθ .= poisson_bracket(θ, ϕ)
-    dΩ .= poisson_bracket(Ω, ϕ) .- diff_y(θ)
+    poisson_bracket(dΩ, Ω, ϕ)
+    diff_y(dθ, θ)
+    dΩ .-= dθ
+    poisson_bracket(dθ, θ, ϕ)
 end
 
 # Parameters
@@ -41,19 +43,16 @@ diagnostics = @diagnostics [
     cfl(; stride=250, silent=true, storage_limit="2KB"),
     plot_vorticity(; stride=1000),
     plot_potential(; stride=1000),
-    plot_density(; stride=1000),
+    plot_density(; stride=1000)
 ]
 
 # Collection of specifications defining the problem to be solved
 prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt=2.5e-3,
-                          boussinesq=true, aliases=[:∂x => :diff_x],
-                          diagnostics=diagnostics)
+                          boussinesq=true, diagnostics=diagnostics)
 
 # The output
-output_file_name = joinpath(@__DIR__, "output", "Garcia 2005 PoP.h5")
-
-output = Output(prob; filename=output_file_name, simulation_name=:parameters,
-                storage_limit="0.5 GB", store_locally=false, resume=true)
+output = Output(prob; filename="Garcia 2005 PoP.h5", simulation_name=:parameters,
+                storage_limit="0.5 GB", store_locally=false, resume=false)
 
 # Solve and plot
 sol = spectral_solve(prob, MSS3(), output;)
