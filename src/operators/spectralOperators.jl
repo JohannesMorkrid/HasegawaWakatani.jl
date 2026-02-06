@@ -68,7 +68,7 @@ include("poissonBracket.jl")
 
 include("spectralFunctions.jl")
 include("solvePhi.jl")
-#include("sources.jl")
+include("sources.jl")
 
 # ------------------------------------ Operator Recipe -------------------------------------
 
