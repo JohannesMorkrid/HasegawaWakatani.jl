@@ -46,4 +46,26 @@ heatmap(domain, Array(N .* ϖ2); aspect_ratio=:equal, title="Non-Boussinesq N∇
 heatmap(domain, Array(ddϖ); aspect_ratio=:equal, title="Reference ϖ")
 heatmap(domain, Array(N); aspect_ratio=:equal, title="Density")
 
-# 2) \phi
+# 2) ϕ = f(x,y) => ϖ(x,y) = ∇⋅(N∇ϕ)
+
+function vorticity(N, ϕ; diff_x, diff_y, quadratic_term)
+    diff_x(quadratic_term(N, diff_x(ϕ))) + diff_y(quadratic_term(N, diff_y(ϕ)))
+end
+
+N = initial_condition(gaussian, domain; A=10, B=1) |> CuArray
+spectral_transform!(N_hat, get_fwd(domain), N)
+ϕ = CUDA.@allowscalar sin.(domain.ky[2] * domain.y) .+ 0 * domain.x' |> CuArray
+ϕ_hat = spectral_transform(ϕ, get_fwd(domain))
+ϖ_hat = vorticity(N_hat, ϕ_hat; diff_x=diff_x, diff_y, quadratic_term)
+
+ϖ = spectral_transform(ϖ_hat, get_bwd(domain))
+heatmap(Array(ϖ))
+
+ϕ1_hat = solve_phi_b(ϖ_hat)
+ϕ2_hat = solve_phi_nb(N_hat, ϖ_hat)
+ϕ1 = spectral_transform(ϕ1_hat, get_bwd(domain))
+ϕ2 = spectral_transform(ϕ2_hat, get_bwd(domain))
+heatmap(Array(ϕ1))
+heatmap(Array(ϕ2))
+using LinearAlgebra
+norm(ϕ2 - ϕ)
