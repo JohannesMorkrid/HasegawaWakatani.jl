@@ -38,6 +38,9 @@ to reconnect to the session and continue where left off. Usefull for overnight s
 Actions tab
 * The CompatHelper.yml needs the user to go into Settings > Actions > General > **Allow GitHub Actions to create and approve pull requests** (toggle it on)
 
+# GPU tips
+* use mapreduce to do both map and reduce operation in one go.
+
 # Juliaup
 * If you are struggling with a folder having a constant julia version check 'juliaup override status'
 
@@ -45,3 +48,4 @@ Actions tab
 * Make sure the broadcasting is done correctly, it is easy to mess up re-assign a variable 
 instead of writing to it elementwise in-place.
 * Having first order derivatives in either the linear or non-linear term does not seem to matter
+* When Fourier transforming using dealiasing the dealiasing_coefficient needs to be divided by, while when inverse Fourier transforming the field needs to be multiplied by the dealiasing_coefficent.
