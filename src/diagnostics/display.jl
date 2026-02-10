@@ -44,11 +44,13 @@ end
 
 # --------------------------------------- Potential ----------------------------------------
 
-function plot_potential(state, prob, time; digits=2, kwargs...)
+function plot_potential(state_hat, prob, time; digits=2, kwargs...)
     @unpack operators, domain = prob
     @unpack solve_phi = operators
-    Ω = selectdim(state, ndims(domain) + 1, 2)
-    ϕ = bwd(domain) * solve_phi(Ω) |> Array
+    slices = eachslice(state_hat; dims=ndims(state_hat))
+    n_hat = slices[1]
+    Ω_hat = slices[2]
+    ϕ = bwd(domain) * solve_phi(n_hat, Ω_hat) |> Array
     plot_field(domain, ϕ, time; field_name=L"\phi", digits=digits, kwargs...)
 end
 

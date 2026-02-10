@@ -255,10 +255,13 @@ end
   
   Probe the potential field, ϕ, at the given `positions`. 
 """
-function probe_potential(state, prob, time, positions; interpolation=nothing)
+function probe_potential(state_hat, prob, time, positions; interpolation=nothing)
     @unpack domain, operators = prob
     @unpack solve_phi = operators
-    ϕ = get_bwd(domain) * solve_phi(selectdim(state, ndims(domain) + 1, 2))
+    slices = eachslice(state_hat; dims=ndims(state_hat))
+    n_hat = slices[1]
+    Ω_hat = slices[2]
+    ϕ = get_bwd(domain) * solve_phi(n_hat, Ω_hat)
     probe_field(ϕ, domain, positions, interpolation)
 end
 
@@ -285,7 +288,10 @@ end
 function probe_radial_velocity(state, prob, time, positions; interpolation=nothing)
     @unpack domain, operators = prob
     @unpack solve_phi, diff_y = operators
-    ϕ_hat = solve_phi(selectdim(state, ndims(domain) + 1, 2))
+    slices = eachslice(state_hat; dims=ndims(state_hat))
+    n_hat = slices[1]
+    Ω_hat = slices[2]
+    ϕ_hat = solve_phi(n_hat, Ω_hat)
     v_x_hat = -diff_y(ϕ_hat)
     v_x = get_bwd(domain) * v_x_hat
     probe_field(v_x, domain, positions, interpolation)
@@ -314,15 +320,15 @@ end
   Probe the density (n), vorticity (Ω), potential (ϕ), radial velocity field (vᵣ) and 
   radial flux (Γ), at the given `positions` all "at once". 
 """
-function probe_all(state, prob, time, positions; interpolation=nothing)
+function probe_all(state_hat, prob, time, positions; interpolation=nothing)
     @unpack domain, operators = prob
     @unpack solve_phi, diff_y = operators
 
-    dim = ndims(domain) + 1
-
     # Calculate spectral fields
-    n_hat, Ω_hat = eachslice(state; dims=dim)
-    ϕ_hat = solve_phi(Ω_hat)
+    slices = eachslice(state_hat; dims=ndims(state_hat))
+    n_hat = slices[1]
+    Ω_hat = slices[2]
+    ϕ_hat = solve_phi(n_hat, Ω_hat)
     v_x_hat = -diff_y(ϕ_hat)
 
     # Cache for transformation
