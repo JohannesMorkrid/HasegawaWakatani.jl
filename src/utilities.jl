@@ -59,7 +59,6 @@ function random_crossphased(domain::AbstractDomain; value=10^-6, cross_phase=pi 
 end
 
 function isolated_blob(domain::AbstractDomain; density::Symbol=:lin, kwargs...)
-    print(kwargs)
     isolated_blob(domain, Val(density); kwargs...)
 end
 

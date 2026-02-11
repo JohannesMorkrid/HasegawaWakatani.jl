@@ -32,8 +32,6 @@ struct QuadraticTerm{TP<:AbstractTransformPlans,P<:AbstractArray,SP<:AbstractArr
         # Calculate correct conversion coefficent
         dealiasing_coefficient = precision(length(up) / spectral_length(domain))
 
-        println(dealiasing_coefficient)
-
         new{typeof(transforms),typeof(U),typeof(up),
             typeof(dealiasing_coefficient)}(transforms, U, V, up, vp,
                                             domain.dealiased, dealiasing_coefficient)
