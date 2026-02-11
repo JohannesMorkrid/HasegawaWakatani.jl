@@ -1,6 +1,6 @@
 name = "HasegawaWakatani"
 uuid = "77b4a5b0-6ed9-4abb-b852-b72faee8deaf"
-version = "0.12.0-DEV"
+version = "0.13.0-DEV"
 authors = ["JohannesMorkrid <johannes.e.morkrid@uit.no>"]
 
 [deps]
