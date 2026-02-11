@@ -81,6 +81,24 @@ broadcastable_ic(::typeof(isolated_blob)) = Val(false)
 
 expTransform(u::AbstractArray) = [exp.(u[:, :, 1]);;; u[:, :, 2]]
 
+# ------------------------------------- Mode Related ---------------------------------------
+
+# In-place method
+function add_constant!(out::AbstractArray, field::AbstractArray, val::Number)
+    out .= field
+    @allowscalar out[1] += val
+    return out
+end
+
+# In-place but overwrites the field
+function add_constant!(field::AbstractArray, val::Number)
+    @allowscalar field[1] += val
+    return field
+end
+
+# Out-of place method
+add_constant(field::AbstractArray, val::Number) = add_constant!(similar(field), field, val)
+
 #------------------------------ Removal of modes -------------------------------------------
 
 function remove_zonal_modes!(u::U, d::D) where {U<:AbstractArray,D<:AbstractDomain}

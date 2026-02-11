@@ -249,8 +249,7 @@ wave_vectors(domain::Domain) = (domain.ky, domain.kx)
 
 Return the domain specific keyword arguments, depending on the type of AbstractDomain.
 """
-domain_kwargs(domain::Domain) = (; real_transform=domain.real_transform,
-                                 dealiased=domain.dealiased)
+domain_kwargs(domain::Domain) = (; real_transform=domain.real_transform, dealiased=domain.dealiased)
 
 """
     spectral_size(domain::AbstractDomain)
