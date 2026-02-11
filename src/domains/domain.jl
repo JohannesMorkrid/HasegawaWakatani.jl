@@ -153,9 +153,7 @@ end
 
 """
     prepare_transform_plans(Nx, Ny, use_cuda, precision, real_transform)
-    prepare_transform_plans(utmp, ::Type{Domain}, ::Val{false})
-    prepare_transform_plans(utmp, ::Type{Domain}, ::Val{true})
-
+    
 Prepare transform plan by preparing a domain using dispatching to call the right \
 construction method.
 """
@@ -165,16 +163,22 @@ function prepare_transform_plans(Nx, Ny, MemoryType, precision, real_transform)
     utmp = zeros(precision, Ny, Nx) |> MemoryType
 
     # Dispatch on Domain and real_transform
-    prepare_transform_plans(utmp, Domain, Val(real_transform))
+    construct_transform_plans(utmp, Domain, Val(real_transform))
 end
 
-function prepare_transform_plans(utmp, ::Type{Domain}, ::Val{true})
+"""
+    construct_transform_plans(utmp, ::Type{Domain}, ::Val{false})
+    construct_transform_plans(utmp, ::Type{Domain}, ::Val{true})
+
+Constructs transform plans based on Domain type and if Real or Complex valued fields.
+"""
+function construct_transform_plans(utmp, ::Type{Domain}, ::Val{true})
     FT = plan_rfft(utmp)
     iFT = plan_irfft(FT * utmp, first(size(utmp)))
     return rFFTPlans(FT, iFT)
 end
 
-function prepare_transform_plans(utmp, ::Type{Domain}, ::Val{false})
+function construct_transform_plans(utmp, ::Type{Domain}, ::Val{false})
     FFTPlans(plan_fft(utmp), plan_ifft(utmp))
 end
 
