@@ -130,12 +130,15 @@ end
 # ------------------------------------- Main Methods ---------------------------------------
 
 # In-place (boussinesq)
-function (op::SolvePhiSimplified)(out::AbstractArray, u::AbstractArray)
-    out .= op.laplacian_inv .* u
+function (op::SolvePhiSimplified)(out::AbstractArray, u::AbstractArray, Ω::AbstractArray)
+    out .= op.laplacian_inv .* Ω
 end
 
-# Out-of-place (boussinesq)
-(op::SolvePhiSimplified)(u::AbstractArray) = op(similar(u), u)
+# Out-of-place (boussinesq) - standard signature 
+(op::SolvePhiSimplified)(u::AbstractArray, Ω::AbstractArray) = op(similar(u), u, Ω)
+
+# Signature kept for legacy
+(op::SolvePhiSimplified)(Ω::AbstractArray) = op(similar(Ω), Ω, Ω)
 
 # In-place (non-boussinesq)
 function (op::SolvePhiNonBoussinesq{:linear})(out::AbstractArray, n::AbstractArray,
@@ -174,7 +177,7 @@ function (op::SolvePhiNonBoussinesq{:linear})(out::AbstractArray, n::AbstractArr
     # Compute residuals
     res = norm(C2 - ϖ)
     iters = 0
-    reltol = rtol * norm(ϖ)
+    reltol = @allowscalar rtol * norm(ϖ)
 
     # Iterate to approximately solve for potential ϕ
     while res > max(reltol, atol) && iters < maxiters
@@ -259,7 +262,7 @@ function (op::SolvePhiNonBoussinesq{:log})(out::AbstractArray, η::AbstractArray
     # Compute residuals
     res = norm(C2 - ϖ)
     iters = 0
-    reltol = rtol * norm(ϖ)
+    reltol = @allowscalar rtol * norm(ϖ)
 
     # Iterate to approximately solve for potential ϕ
     while res > max(reltol, atol) && iters < maxiters
@@ -348,7 +351,7 @@ function (op::SolvePhiRelaxation{:linear})(out::AbstractArray, n::AbstractArray,
     # Compute residuals
     res = norm(C2 - ϖ)
     iters = 0
-    reltol = rtol * norm(ϖ)
+    reltol = @allowscalar rtol * norm(ϖ)
 
     # Iterate to approximately solve for potential ϕ
     while res > max(reltol, atol) && iters < maxiters
@@ -438,7 +441,7 @@ function (op::SolvePhiRelaxation{:log})(out::AbstractArray, η::AbstractArray,
     # Compute residuals
     res = norm(C2 - ϖ)
     iters = 0
-    reltol = rtol * norm(ϖ)
+    reltol = @allowscalar rtol * norm(ϖ)
 
     # Iterate to approximately solve for potential ϕ
     while res > max(reltol, atol) && iters < maxiters

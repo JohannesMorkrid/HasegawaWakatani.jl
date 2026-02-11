@@ -59,8 +59,10 @@ end
 function kinetic_energy_integral(state, prob, time; quadrature=nothing)
     @unpack domain, operators = prob
     @unpack solve_phi, diff_x, diff_y = operators
-    Ω = selectdim(state, ndims(domain) + 1, 1)
-    ϕ = solve_phi(Ω)
+    slices = eachslice(state; dims=ndims(state))
+    n = slices[1]
+    Ω = slices[2]
+    ϕ = solve_phi(n, Ω)
     parsevals_theorem(diff_x(ϕ), domain) / 2 + parsevals_theorem(diff_y(ϕ), domain) / 2
 end
 
@@ -116,8 +118,10 @@ function resistive_dissipation_integral(state, prob, time; adiabaticity_symbol=:
     @unpack domain, operators, p = prob
     @unpack solve_phi, quadratic_term = operators
     C = getfield(p, adiabaticity_symbol)
-    n, Ω = eachslice(state; dims=ndims(state))
-    h = n .- solve_phi(Ω)
+    slices = eachslice(state; dims=ndims(state))
+    n = slices[1]
+    Ω = slices[2]
+    h = n .- solve_phi(n, Ω)
     return C * parsevals_theorem(h, domain)
 end
 
@@ -143,7 +147,8 @@ function potential_dissipation_integral(state, prob, time; diffusivity_symbol=:�
     @unpack domain, p, operators = prob
     @unpack hyper_laplacian, quadratic_term = operators
     ν = getfield(p, diffusivity_symbol)
-    n = selectdim(state, ndims(domain) + 1, 1)
+    slices = eachslice(state; dims=ndims(state))
+    n = slices[1]
     ν * integral_of_quadratic_term(n, hyper_laplacian(n), domain, quadratic_term)
 end
 
@@ -170,8 +175,10 @@ function kinetic_dissipation_integral(state, prob, time; viscosity_symbol=:μ,
     @unpack domain, p, operators = prob
     @unpack solve_phi, hyper_laplacian, quadratic_term = operators
     μ = getfield(p, viscosity_symbol)
-    Ω = selectdim(state, ndims(domain) + 1, 2)
-    ϕ = solve_phi(Ω)
+    slices = eachslice(state; dims=ndims(state))
+    n = slices[1]
+    Ω = slices[2]
+    ϕ = solve_phi(n, Ω)
     μ * integral_of_quadratic_term(ϕ, hyper_laplacian(Ω), domain, quadratic_term)
 end
 
@@ -226,7 +233,9 @@ function enstropy_dissipation_integral(state, prob, time; diffusivity_symbol=:ν
     @unpack hyper_laplacian, quadratic_term = operators
     ν = getfield(p, diffusivity_symbol)
     μ = getfield(p, viscosity_symbol)
-    n, Ω = eachslice(state; dims=ndims(state))
+    slices = eachslice(state; dims=ndims(state))
+    n = slices[1]
+    Ω = slices[2]
     h = n - Ω
     diffusive_terms = ν * hyper_laplacian(n) - μ * hyper_laplacian(Ω)
     integral_of_quadratic_term(h, diffusive_terms, domain, quadratic_term)
