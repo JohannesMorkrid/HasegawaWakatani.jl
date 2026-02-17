@@ -138,9 +138,7 @@ end
 function check_if_output_file_exists_and_resume_is_false(simulation::HDF5.Group,
                                                          resume::Bool)
     if !resume && isfile(simulation.file.filename)
-        println("The output file already exists, and this run is not resuming a previous simulation. Do you want to overwrite it? (y/n)")
-        answer = readline()
-
+        answer = Base.prompt("The output file already exists, and this run is not resuming a previous simulation. Do you want to overwrite it? (y/n)")
         if answer == "y"
             return true
         else
