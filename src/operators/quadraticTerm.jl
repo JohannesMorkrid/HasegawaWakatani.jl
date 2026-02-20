@@ -21,7 +21,7 @@ struct QuadraticTerm{TP<:AbstractTransformPlans,P<:AbstractArray,SP<:AbstractArr
         # Allocate the physical array, using zero-padding if dealiasing is enabled
         utmp = zeros(precision, domain.dealiased ? pad_size(Ns) : Ns) |> memory_type(domain)
 
-        transforms = prepare_transform_plans(utmp, Domain, Val(domain.real_transform))
+        transforms = construct_transform_plans(utmp, Domain, Val(domain.real_transform))
 
         # Allocate data for pseudo spectral schemes
         up = fwd(transforms) * zero(utmp)
