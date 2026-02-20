@@ -49,10 +49,10 @@ diagnostics = @diagnostics [
     probe_density(; positions=[(5, 0), (8.5, 0), (11.25, 0), (14.375, 0)], stride=10),
     radial_COM(; stride=1),
     progress(; stride=-1),
-    #cfl(; stride=250, silent=true, storage_limit="2KB"),
+    cfl(; stride=250, silent=true, storage_limit="2KB"),
     plot_vorticity(; stride=1000),
-    #plot_potential(; stride=1000),
-    plot_density(; stride=100)
+    plot_potential(; stride=1000),
+    plot_density(; stride=1000)
 ]
 
 # Collection of specifications defining the problem to be solved
