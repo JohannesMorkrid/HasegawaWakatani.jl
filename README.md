@@ -22,11 +22,11 @@ The code features:
 - [`SpectralOperators`]() to compute spatial derivatives in spectral space
 - Mixed Stiffly-Stable ([`MSS`]()) time integrators; up to third order
 - [`HDF5`](https://github.com/JuliaIO/HDF5.jl) data output for binary format storage with [`Blosc`](https://github.com/JuliaIO/HDF5.jl/tree/master/filters/H5Zblosc) compression
-- Pseudospectral methods for non-linear terms using Fast Fourier Transform ([`FFTW`](https://github.com/JuliaMath/FFTW.jl))
+- Pseudospectral methods for non-linear terms using FFTs ([`FFTW`](https://github.com/JuliaMath/FFTW.jl))
 - 2/3-[`dealiasing`]() off quadratic terms and non-linear functions
-- [`Diagnostic`]() interface for sampling at high frequencies with minimal storage
+- [`Diagnostic`]()'s for sampling at high frequencies with minimal storage
 - GPU support ([`CUDA`](https://github.com/JuliaGPU/CUDA.jl), [`AMD`](https://github.com/JuliaGPU/AMDGPU.jl))
-- Easy construction of canonical [`initial conditions`]() in fluid and turbulence problems
+- Easy construction of canonical [`initial conditions`]() for PDEs
 - Option to [`remove modes`]() of interest
 
 ## Installation
@@ -48,12 +48,12 @@ julia> import Pkg; Pkg.add("Advectra")
 
 Say you want to evolve the following system of coupled partial differential-equations (model from [Garcia et al.](https://doi.org/10.1063/1.2044487)):
 
-$$ \frac{\partial n}{\partial t} + \{\phi, n\} = \nu\nabla^2 n $$
+$$ \frac{\partial n}{\partial t} + \\{\phi, n\\} = \nu\nabla^2 n $$
 
-$$ \frac{\partial\Omega}{\partial t} + \{\phi,\Omega\} + \frac{\partial n}{\partial y} = \mu\nabla^2 \Omega $$
+$$ \frac{\partial\Omega}{\partial t} + \\{\phi,\Omega\\} + \frac{\partial n}{\partial y} = \mu\nabla^2 \Omega $$
 
 where $n$ is the density field, $\Omega = \nabla^2\phi$ is the voriticy field, $\phi$ is 
-the potential field, $\{f, g\} = \frac{\partial f}{\partial x}\frac{\partial g}{\partial y} - \frac{\partial f}{\partial y}\frac{\partial g}{\partial x}$ denotes the non-linear [Poisson bracket](https://en.wikipedia.org/wiki/Poisson_bracket#Definition_in_canonical_coordinates) operator and $\nu$ and $\mu$ are damping coefficients.
+the potential field, $\\{f, g\\} = \frac{\partial f}{\partial x}\frac{\partial g}{\partial y} - \frac{\partial f}{\partial y}\frac{\partial g}{\partial x}$ denotes the non-linear [Poisson bracket](https://en.wikipedia.org/wiki/Poisson_bracket#Definition_in_canonical_coordinates) operator and $\nu$ and $\mu$ are damping coefficients.
 
 The diffusive terms lead to the following `Linear` operator:  
 ```julia
