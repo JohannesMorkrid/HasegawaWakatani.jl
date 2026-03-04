@@ -52,10 +52,11 @@ $$ \frac{\partial n}{\partial t} + \\{\phi, n\\} = \nu\nabla^2 n $$
 
 $$ \frac{\partial\Omega}{\partial t} + \\{\phi,\Omega\\} + \frac{\partial n}{\partial y} = \mu\nabla^2 \Omega $$
 
-where $n$ is the density field, $\Omega = \nabla^2\phi$ is the voriticy field, $\phi$ is 
+where $n$ is the density field, $\Omega = \nabla^2\phi$ is the voriticy field, $\phi$ is
 the potential field, $\\{f, g\\} = \frac{\partial f}{\partial x}\frac{\partial g}{\partial y} - \frac{\partial f}{\partial y}\frac{\partial g}{\partial x}$ denotes the non-linear [Poisson bracket](https://en.wikipedia.org/wiki/Poisson_bracket#Definition_in_canonical_coordinates) operator and $\nu$ and $\mu$ are damping coefficients.
 
-The diffusive terms lead to the following `Linear` operator:  
+The diffusive terms lead to the following `Linear` operator:
+
 ```julia
 function Linear(du, u, operators, p, t)
     @unpack ν, μ = p
@@ -67,11 +68,13 @@ function Linear(du, u, operators, p, t)
     dΩ .= μ .* laplacian(Ω)
 end
 ```
-where most of the function is just unpacking, while the actual computations happen at the 
+
+where most of the function is just unpacking, while the actual computations happen at the
 last two lines. To compute the Laplacian operator ($\nabla^2$) it is as trivial as calling
 the `laplacian` method for each field. Note the use of [broadcasting](https://docs.julialang.org/en/v1/manual/arrays/#Broadcasting) for writing [in-place](https://docs.sciml.ai/DiffEqDocs/stable/basics/problem/#In-place-vs-Out-of-Place-Function-Definition-Forms).
 
 Similarly, the advective terms lead to the following `NonLinear` operator:
+
 ```julia
 function NonLinear(du, u, operators, p, t)
     n, Ω = eachslice(u; dims=3)
@@ -82,8 +85,9 @@ function NonLinear(du, u, operators, p, t)
     dΩ .= poisson_bracket(Ω, ϕ) - diff_y(n)
 end
 ```
-which is a bit more complicated, as the laplacian has to be inversed using the `solve_phi` 
-method. Other than that the derivative in y is computed using `diff_y` and the Poisson 
+
+which is a bit more complicated, as the laplacian has to be inversed using the `solve_phi`
+method. Other than that the derivative in y is computed using `diff_y` and the Poisson
 bracket is computed using the `poisson_bracket`method.
 
 ### Results:
