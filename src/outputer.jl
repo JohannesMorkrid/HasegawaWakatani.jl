@@ -1065,7 +1065,7 @@ function validate_restart_attributes(simulation::HDF5.Group, prob::SpectralODEPr
                 error("Restart Mismatch: '$key' was $(actual) in file, but is $(expected) now.")
             end
         else
-            if !(actual ≈ expected)
+            if !(actual == expected)
                 error("Restart Mismatch: '$key' was $(actual) in file, but is $(expected) now.")
             end
         end
