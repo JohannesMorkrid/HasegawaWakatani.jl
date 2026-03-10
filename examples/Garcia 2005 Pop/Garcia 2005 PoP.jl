@@ -2,7 +2,7 @@
 using Advectra
 using CUDA
 
-domain = Domain(256, 256; Lx=100, Ly=100, MemoryType=CuArray, precision=Float32)
+domain = Domain(256, 256; Lx=50, Ly=50, MemoryType=CuArray, precision=Float32)
 # Check documentation to see other initial conditions
 ic = initial_condition(isolated_blob, domain)
 
@@ -29,7 +29,7 @@ function NonLinear(du, u, operators, p, t)
 end
 
 # Parameters
-parameters = (ν=1e-2, κ=1e-2)
+parameters = (ν=1e-2, κ=3e-2)
 
 # Time interval
 tspan = [0.0, 20.0]
@@ -40,10 +40,10 @@ diagnostics = @diagnostics [
     radial_COM(; stride=1),
     progress(; stride=-1),
     # cfl(; stride=250, silent=true, storage_limit="2KB"),
-    sample_density(stride=10)
-    # plot_vorticity(; stride=1000),
-    # plot_potential(; stride=1000),
-    # plot_density(; stride=1000)
+    sample_density(stride=10),
+    plot_vorticity(; stride=1000),
+    plot_potential(; stride=1000),
+    plot_density(; stride=1000)
 ]
 
 # Collection of specifications defining the problem to be solved
@@ -51,8 +51,8 @@ prob = SpectralODEProblem(Linear, NonLinear, ic, domain, tspan; p=parameters, dt
                           boussinesq=true, diagnostics=diagnostics)
 
 # The output
-output = Output(prob; filename="Garcia 2005 PoP.h5", simulation_name=:parameters,
-                storage_limit="5 GB", store_locally=false, resume=true)
+output = Output(prob; filename="Garcia 2005 PoP.h5", simulation_name="output",
+                storage_limit="5 GB", store_locally=false, resume=false)
 
 # Solve and plot
 sol = spectral_solve(prob, MSS3(), output;)
