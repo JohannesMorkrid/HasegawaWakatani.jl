@@ -268,6 +268,12 @@ function write_attributes(simulation, prob::SpectralODEProblem)
     !isempty(configfile) && open(configfile, "r") do file
         write_attribute(simulation, "config-file", read(file, String))
     end
+
+    # Store the PID, timestamp and version info
+    write_attribute(simulation, "pid", getpid())
+    write_attribute(simulation, "created-on", string(now()))
+    #write_attributes(simulation, "uuid", uuid7())
+    write_attribute(simulation, "Advectra-version", string(Base.pkgversion(Advectra)))
 end
 
 function write_attributes(simulation, domain::AbstractDomain)
